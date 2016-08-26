@@ -66,6 +66,28 @@ int get_cell(struct Grid *grid, int x, int y) {
 }
 
 /*
+ * Print the ANSI escape sequence to set the colour of text and to make text
+ * bold
+ */
+void set_colour(char value) {
+    int colour = -1;;
+    switch (value) {
+        case '1': colour = 34; break; // Blue
+        case '2': colour = 31; break; // Red
+        case '3': colour = 32; break; // Green
+        case '4': colour = 35; break; // Magneta
+        case '5': colour = 36; break; // Cyan
+        case '6': colour = 33; break; // Yellow
+        case '7': colour = 30; break; // Black
+        case '8': colour = 37; break; // White
+    }
+    if (colour > 0) {
+        printf("%c[1m", 27);  // Bold
+        printf("%c[%dm", 27, colour);  // Set colour
+    }
+}
+
+/*
  * Print the provided grid to stdout
  */
 void print_grid(struct Grid *grid) {
@@ -122,7 +144,10 @@ void print_grid(struct Grid *grid) {
 
         // Print row of data
         for (int x=0; x<grid->width; x++) {
-            printf("%c", get_cell(grid, x, y));
+            char value = get_cell(grid, x, y);
+            set_colour(value);
+            printf("%c", value);
+            printf("%c[0m", 27);
 
             // Print the seperator if this is not the final column
             if (x + 1 < grid->width) {
@@ -348,9 +373,9 @@ int main(int argc, char **args) {
     srand(time(NULL));
 
     // Game settings are hardcoded for now...
-    int width = 8;
-    int height = 8;
-    int mine_count = 10;
+    int width = 10;
+    int height = 10;
+    int mine_count = 30;
 
     struct Game game;
     init_game(&game, width, height, mine_count);

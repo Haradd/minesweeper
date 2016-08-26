@@ -24,6 +24,7 @@ struct Game {
     struct Grid grid;
     int mine_count;
     int *mines;
+    int cells_revealed;
 };
 
 /*
@@ -146,6 +147,17 @@ int set_cell(struct Grid *grid, int x, int y, char value) {
 }
 
 /*
+ * Set the locations of the mines in the grid
+ */
+void show_mines(struct Game *game) {
+    for (int i=0; i<game->mine_count; i++) {
+        int x = game->mines[i] % game->grid.width;
+        int y = game->mines[i] / game->grid.width;
+        set_cell(&(game->grid), x, y, MINE);
+    }
+}
+
+/*
  * Return 1 if there is a mine at the specified coordinates, 0 otherwise
  */
 int is_mine(struct Game *game, int x, int y) {
@@ -210,6 +222,7 @@ void init_game(struct Game *game, int width, int height, int mine_count) {
     init_grid(&(game->grid), width, height, UNKOWN);
     game->mine_count = mine_count;
     game->mines = malloc(sizeof(int) * mine_count);
+    game->cells_revealed = 0;
 
     // Position the mines
     int mines_placed = 0;
@@ -226,12 +239,6 @@ void init_game(struct Game *game, int width, int height, int mine_count) {
 
         if (!collision) {
             game->mines[mines_placed] = r;
-
-            // Show the mine in the grid for debugging purposes
-            // int x = r % width;
-            // int y = r / width;
-            // set_cell(&(game->grid), x, y, MINE);
-
             mines_placed++;
         }
     }
@@ -245,15 +252,18 @@ void init_game(struct Game *game, int width, int height, int mine_count) {
  */
 void reveal_cell(struct Game *game, int x, int y) {
     if (is_mine(game, x, y)) {
-        set_cell(&(game->grid), x, y, MINE);
+        show_mines(game);
         print_grid(&(game->grid));
         printf("You hit a mine!\n");
         exit(0);
     }
     else {
+        game->cells_revealed++;
         int n = adjacent_mines(game, x, y);
         char c;
 
+        // Show the NO_MINES char if there are no adjacent mines, otherwise
+        // show the number of adjacent mines
         if (n == 0) {
             c = NO_MINES;
         }
@@ -352,6 +362,13 @@ int main(int argc, char **args) {
         read_coordinates(&(game.grid), &x, &y);
         reveal_cell(&game, x, y);
         print_grid(&(game.grid));
+
+        // See if all mines have been found
+        int n = game.grid.width * game.grid.height - game.mine_count;
+        if (game.cells_revealed == n) {
+            printf("You won!\n");
+            exit(0);
+        }
     }
 
     return 0;

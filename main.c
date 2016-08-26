@@ -1,13 +1,17 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <time.h>
 
 #define COLUMN_SEPERATOR '|'
-#define ROW_SEPERATOR '='
-#define JOIN_SEPERATOR '+'
+#define ROW_SEPERATOR    '='
+#define JOIN_SEPERATOR   '+'
 
-#define MAX_WIDTH 26
+#define MAX_WIDTH  26
 #define MAX_HEIGHT 99
+
+#define UNKOWN '-'
+#define MINE   'M'
 
 struct Grid {
     int width;
@@ -15,6 +19,15 @@ struct Grid {
     char *cells;
 };
 
+struct Game {
+    struct Grid grid;
+    int mine_count;
+    int *mines;
+};
+
+/*
+ * Return the width of the decimal representation of the integer n
+ */
 int int_width(int n) {
     if (n == 0) {
         return 1;
@@ -151,11 +164,35 @@ void init_grid(struct Grid *grid, int width, int height, char seed) {
     }
 }
 
-/*
- * Read from stdin until a new line is reached
- */
-void clear_stdin() {
-    while (getchar() != '\n');
+void init_game(struct Game *game, int width, int height, int mine_count) {
+    init_grid(&(game->grid), width, height, UNKOWN);
+    game->mine_count = mine_count;
+    game->mines = malloc(sizeof(int) * mine_count);
+
+    // Position the mines
+    int mines_placed = 0;
+    while (mines_placed < mine_count) {
+        int r = rand() % (width * height);
+
+        // Check that we have not already placed a mine in this position
+        int collision = 0;
+        for (int i=0; i<mines_placed; i++) {
+            if (r == game->mines[i]) {
+                collision = 1;
+            }
+        }
+
+        if (!collision) {
+            game->mines[mines_placed] = r;
+
+            // Show the mine in the grid for debugging purposes
+            int x = r % width;
+            int y = r / width;
+            set_cell(&(game->grid), x, y, MINE);
+
+            mines_placed++;
+        }
+    }
 }
 
 /*
@@ -209,18 +246,24 @@ void read_coordinates(struct Grid *grid, int *x_ptr, int *y_ptr) {
 }
 
 int main(int argc, char **args) {
-    struct Grid grid;
-    init_grid(&grid, 8, 8, ' ');
-    print_grid(&grid);
+    srand(time(NULL));
+
+    // Game settings are hardcoded for now...
+    int width = 8;
+    int height = 8;
+    int mine_count = 10;
+
+    struct Game game;
+    init_game(&game, width, height, mine_count);
+    print_grid(&(game.grid));
 
     int running = 1;
     while (running) {
-
         int x, y;
-        read_coordinates(&grid, &x, &y);
+        read_coordinates(&(game.grid), &x, &y);
 
-        set_cell(&grid, x, y, '1');
-        print_grid(&grid);
+        set_cell(&(game.grid), x, y, '1');
+        print_grid(&(game.grid));
     }
 
     return 0;

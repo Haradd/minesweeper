@@ -10,8 +10,9 @@
 #define MAX_WIDTH  26
 #define MAX_HEIGHT 99
 
-#define UNKOWN '-'
-#define MINE   'M'
+#define UNKOWN   '-'
+#define MINE     'M'
+#define NO_MINES ' '
 
 struct Grid {
     int width;
@@ -237,6 +238,53 @@ void init_game(struct Game *game, int width, int height, int mine_count) {
 }
 
 /*
+ * Reveal a cell. If the cell contains a mine, show a message and exit the
+ * program. If there are any adjacent mines, show the number and return.
+ * If there are no adjacent mines, recursively reveal all adjacent cells that
+ * have not already been revealed
+ */
+void reveal_cell(struct Game *game, int x, int y) {
+    if (is_mine(game, x, y)) {
+        set_cell(&(game->grid), x, y, MINE);
+        print_grid(&(game->grid));
+        printf("You hit a mine!\n");
+        exit(0);
+    }
+    else {
+        int n = adjacent_mines(game, x, y);
+        char c;
+
+        if (n == 0) {
+            c = NO_MINES;
+        }
+        else {
+            c = n + '0';
+        }
+
+        set_cell(&(game->grid), x, y, c);
+
+        if (n == 0) {
+            for (int dx=-1; dx<=1; dx++) {
+                for (int dy=-1; dy<=1; dy++) {
+
+                    // Skip if (x + dx, y + dy) is not in the grid
+                    if (!valid_coords(&(game->grid), x + dx, y + dy)) {
+                        continue;
+                    }
+
+                    // Skip this cell if it has already been revealed
+                    if (get_cell(&(game->grid), x + dx, y + dy) != UNKOWN) {
+                        continue;
+                    }
+
+                    reveal_cell(game, x + dx, y + dy);
+                }
+            }
+        }
+    }
+}
+
+/*
  * Read a pair of coordinates from the user (e.g. A5) and store them at the
  * location pointed to by x and y (e.g. x=0, y=4)
  *
@@ -302,16 +350,7 @@ int main(int argc, char **args) {
     while (running) {
         int x, y;
         read_coordinates(&(game.grid), &x, &y);
-
-        if (is_mine(&game, x, y)) {
-            printf("You hit a mine!\n");
-            exit(0);
-        }
-        else {
-            int n = adjacent_mines(&game, x, y);
-            set_cell(&(game.grid), x, y, n + '0');
-        }
-
+        reveal_cell(&game, x, y);
         print_grid(&(game.grid));
     }
 

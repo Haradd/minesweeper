@@ -145,6 +145,47 @@ int set_cell(struct Grid *grid, int x, int y, char value) {
 }
 
 /*
+ * Return 1 if there is a mine at the specified coordinates, 0 otherwise
+ */
+int is_mine(struct Game *game, int x, int y) {
+    int position = x + y * game->grid.width;
+    for (int i=0; i<game->mine_count; i++) {
+        if (game->mines[i] == position) {
+            return 1;
+        }
+    }
+
+    return 0;
+}
+
+/*
+ * Return the number of mines adjacent to the specified location
+ */
+int adjacent_mines(struct Game *game, int x, int y) {
+    int count = 0;
+    for (int dx=-1; dx<=1; dx++) {
+        for (int dy=-1; dy<=1; dy++) {
+
+            // Skip this cell if (dx, dy) == (x, y)
+            if (dx == 0 && dy == 0) {
+                continue;
+            }
+
+            // Skip if this cell is not in the grid
+            if (!valid_coords(&(game->grid), x + dx, y + dy)) {
+                continue;
+            }
+
+            if (is_mine(game, x + dx, y + dy)) {
+                count++;
+            }
+        }
+    }
+
+    return count;
+}
+
+/*
  * Initialise the grid, setting the value of each cell to seed
  */
 void init_grid(struct Grid *grid, int width, int height, char seed) {
@@ -186,9 +227,9 @@ void init_game(struct Game *game, int width, int height, int mine_count) {
             game->mines[mines_placed] = r;
 
             // Show the mine in the grid for debugging purposes
-            int x = r % width;
-            int y = r / width;
-            set_cell(&(game->grid), x, y, MINE);
+            // int x = r % width;
+            // int y = r / width;
+            // set_cell(&(game->grid), x, y, MINE);
 
             mines_placed++;
         }
@@ -262,7 +303,15 @@ int main(int argc, char **args) {
         int x, y;
         read_coordinates(&(game.grid), &x, &y);
 
-        set_cell(&(game.grid), x, y, '1');
+        if (is_mine(&game, x, y)) {
+            printf("You hit a mine!\n");
+            exit(0);
+        }
+        else {
+            int n = adjacent_mines(&game, x, y);
+            set_cell(&(game.grid), x, y, n + '0');
+        }
+
         print_grid(&(game.grid));
     }
 

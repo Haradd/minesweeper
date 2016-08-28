@@ -11,10 +11,6 @@
 #define MAX_WIDTH  26
 #define MAX_HEIGHT 99
 
-#define UNKOWN   '-'
-#define MINE     'M'
-#define NO_MINES ' '
-
 /*
  * Return the width of the decimal representation of the integer n
  */
@@ -56,7 +52,7 @@ int get_cell(struct Grid *grid, int x, int y) {
 /*
  * Set the value of a cell in the grid. Return 1 if set succesfully, 0 otherwise
  */
-int set_cell(struct Grid *grid, int x, int y, char value) {
+int set_cell(struct Grid *grid, int x, int y, int value) {
     if (valid_coords(grid, x, y)) {
         grid->cells[x + y * grid->width] = value;
         return 1;
@@ -73,7 +69,7 @@ void show_mines(struct Game *game) {
     for (int i=0; i<game->mine_count; i++) {
         int x = game->mines[i] % game->grid.width;
         int y = game->mines[i] / game->grid.width;
-        set_cell(&(game->grid), x, y, MINE);
+        set_cell(&(game->grid), x, y, CELL_TYPE_MINE);
     }
 }
 
@@ -122,7 +118,7 @@ int adjacent_mines(struct Game *game, int x, int y) {
  * Initialise the grid, setting the value of each cell to seed. Return 1 if
  * successful, 0 otherwise
  */
-int init_grid(struct Grid *grid, int width, int height, char seed) {
+int init_grid(struct Grid *grid, int width, int height, int seed) {
     if (width < 1 || width > MAX_WIDTH || height < 1 || height > MAX_HEIGHT) {
         printf("Invalid grid dimensions\n");
         return 0;
@@ -146,7 +142,7 @@ int init_grid(struct Grid *grid, int width, int height, char seed) {
  * otherwise
  */
 int init_game(struct Game *game, int width, int height, int mine_count) {
-    if (!init_grid(&(game->grid), width, height, UNKOWN)) {
+    if (!init_grid(&(game->grid), width, height, CELL_TYPE_UNKNOWN)) {
         return 0;
     }
 
@@ -234,7 +230,7 @@ void print_grid(struct Grid *grid) {
 
         // Print row of data
         for (int x=0; x<grid->width; x++) {
-            printf("%c", get_cell(grid, x, y));
+            printf("%d", get_cell(grid, x, y));
 
             // Print the seperator if this is not the final column
             if (x + 1 < grid->width) {
@@ -260,34 +256,37 @@ void reveal_cell(struct Game *game, int x, int y) {
     else {
         game->cells_revealed++;
         int n = adjacent_mines(game, x, y);
-        char c;
+        int cell_value;
 
-        // Show the NO_MINES char if there are no adjacent mines, otherwise
-        // show the number of adjacent mines
+        // Set the cell to 'no mines' if there are no adjacent mines, otherwise
+        // set it to the number of adjacent mines
         if (n == 0) {
-            c = NO_MINES;
+            cell_value = CELL_TYPE_NO_MINES;
         }
         else {
-            c = n + '0';
+            cell_value = n;
         }
 
-        set_cell(&(game->grid), x, y, c);
+        set_cell(&(game->grid), x, y, cell_value);
 
         if (n == 0) {
             for (int dx=-1; dx<=1; dx++) {
                 for (int dy=-1; dy<=1; dy++) {
 
+                    int newX = x + dx;
+                    int newY = y + dy;
+
                     // Skip if (x + dx, y + dy) is not in the grid
-                    if (!valid_coords(&(game->grid), x + dx, y + dy)) {
+                    if (!valid_coords(&(game->grid), newX, newY)) {
                         continue;
                     }
 
                     // Skip this cell if it has already been revealed
-                    if (get_cell(&(game->grid), x + dx, y + dy) != UNKOWN) {
+                    if (get_cell(&(game->grid), newX, newY) != CELL_TYPE_UNKNOWN) {
                         continue;
                     }
 
-                    reveal_cell(game, x + dx, y + dy);
+                    reveal_cell(game, newX, newY);
                 }
             }
         }

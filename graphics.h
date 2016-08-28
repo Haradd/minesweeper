@@ -2,7 +2,6 @@
 #define GRAPHICS_H
 
 int init_allegro();
-void draw_grid(struct Grid *grid);
-void draw_cell(struct Grid *grid, int x, int y);
+void draw_grid(struct Game *game);
 
 #endif

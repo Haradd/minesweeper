@@ -141,7 +141,9 @@ int init_grid(struct Grid *grid, int width, int height, int seed) {
  * Initialise the minesweeper game and place mines. Return 1 if succesful, 0
  * otherwise
  */
-int init_game(struct Game *game, int width, int height, int mine_count) {
+int init_game(struct Game *game, int width, int height, int mine_count,
+              int display_width, int display_height) {
+
     if (!init_grid(&(game->grid), width, height, CELL_TYPE_UNKNOWN)) {
         return 0;
     }
@@ -170,75 +172,15 @@ int init_game(struct Game *game, int width, int height, int mine_count) {
         }
     }
 
+    // Calculate cell width in px and grid offset
+    int x = display_width / game->grid.width;
+    int y = display_height / game->grid.height;
+    game->cell_size = (x < y ? x : y);
+
+    game->x_padding = (display_width - game->cell_size * game->grid.width) / 2;
+    game->y_padding = (display_height - game->cell_size * game->grid.height) / 2;
+
     return 1;
-}
-
-/*
- * Print the provided grid to stdout
- */
-void print_grid(struct Grid *grid) {
-
-    // The width of the column to show numbers on the vertical axis
-    int labels_width = int_width(grid->height + 1);
-
-    // Print horizontal axis labels
-    for (int i=0; i<labels_width + 3; i++) {
-        // Print some spaces to offset the labels by the width of the vertical
-        // axis labels. The + 3 is to account for the padding, seperator and
-        // padding
-        printf(" ");
-    }
-    for (int i=0; i<grid->width; i++) {
-        // Get char code by adding 65
-        printf("%c", i + 65);
-
-        // Print the seperator if this is not the final column
-        if (i + 1 < grid->width) {
-            printf(" %c ", COLUMN_SEPERATOR);
-        }
-    }
-    printf("\n");
-
-    // Print a line seperating the horizontal axis labels from the actual data
-    for (int i=0; i<labels_width + 1; i++) {
-        // Print some spaces to offset by labels column width, + 1 for padding
-        printf(" ");
-    }
-    printf("%c%c", JOIN_SEPERATOR, ROW_SEPERATOR);
-
-    for (int i=0; i<grid->width; i++) {
-        printf("%c", ROW_SEPERATOR);
-
-        // Print the seperator if this is not the final column
-        if (i + 1 < grid->width) {
-            printf("%c%c%c", ROW_SEPERATOR, JOIN_SEPERATOR, ROW_SEPERATOR);
-        }
-    }
-    printf("\n");
-
-    // Print the actual grid
-    for (int y=0; y<grid->height; y++) {
-
-        // Print vertical axis label
-        int padding = labels_width - int_width(y + 1);
-        for (int i=0; i<padding; i++) {
-            // Print some padding since if height >= 10 the columns will not
-            // align properly otherwise
-            printf(" ");
-        }
-        printf("%d %c ", y + 1, COLUMN_SEPERATOR);
-
-        // Print row of data
-        for (int x=0; x<grid->width; x++) {
-            printf("%d", get_cell(grid, x, y));
-
-            // Print the seperator if this is not the final column
-            if (x + 1 < grid->width) {
-                printf(" %c ", COLUMN_SEPERATOR);
-            }
-        }
-        printf("\n");
-    }
 }
 
 /*
@@ -250,7 +192,6 @@ void print_grid(struct Grid *grid) {
 void reveal_cell(struct Game *game, int x, int y) {
     if (is_mine(game, x, y)) {
         show_mines(game);
-        print_grid(&(game->grid));
         game->mine_exploded = 1;
     }
     else {

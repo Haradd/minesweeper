@@ -14,6 +14,7 @@ ALLEGRO_COLOR mine_colour;
 ALLEGRO_COLOR unknown_colour;
 ALLEGRO_COLOR no_mines_colour;
 ALLEGRO_COLOR nearby_mines_colour[8];
+ALLEGRO_COLOR flag_colour;
 
 ALLEGRO_FONT *font;
 
@@ -73,6 +74,7 @@ int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
     nearby_mines_colour[5] = al_map_rgb(0, 200, 200);
     nearby_mines_colour[6] = al_map_rgb(200, 200, 200);
     nearby_mines_colour[7] = al_map_rgb(200, 50, 200);
+    flag_colour = al_map_rgb(255, 0, 100);
 
     return 1;
 }
@@ -83,7 +85,7 @@ int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
 void draw_cell(struct Game *game, int x, int y) {
     int value = get_cell(&(game->grid), x, y);
 
-    int draw_text = 0;
+    char text = 0;
     ALLEGRO_COLOR c;
     switch (value) {
         case CELL_TYPE_MINE:
@@ -98,9 +100,14 @@ void draw_cell(struct Game *game, int x, int y) {
             c = no_mines_colour;
             break;
 
+        case CELL_TYPE_FLAG:
+            c = flag_colour;
+            text = 'F';
+            break;
+
         default:
             c = nearby_mines_colour[value - 1];
-            draw_text = 1;
+            text = value + '0';
     }
 
     int sx = game->x_padding + game->cell_size * x;
@@ -108,9 +115,9 @@ void draw_cell(struct Game *game, int x, int y) {
     al_draw_filled_rectangle(sx, sy, sx + game->cell_size, sy + game->cell_size,
                              c);
 
-    if (draw_text) {
-        char text[] = {value + '0'};
-        al_draw_text(font, al_map_rgb(0, 0, 0), sx, sy, 0, text);
+    if (text != 0) {
+        char string[] = {text};
+        al_draw_text(font, al_map_rgb(0, 0, 0), sx, sy, 0, string);
     }
 }
 

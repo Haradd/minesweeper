@@ -35,7 +35,6 @@ int get_clicked_cell(struct Game *game, int mouse_x, int mouse_y, int *x_ptr,
 }
 
 int main(int argc, char **args) {
-
     srand(time(NULL));
 
     ALLEGRO_DISPLAY *display;
@@ -86,9 +85,9 @@ int main(int argc, char **args) {
                     if (event.mouse.button == 1) {
                         reveal_cell(&game, x, y);
                     }
-                    // Right click - place flag
+                    // Right click - toggle flag
                     else if (event.mouse.button == 2) {
-                        printf("Placing flag\n");
+                        toggle_flag(&(game.grid), x, y);
                     }
 
                     draw_grid(&game);

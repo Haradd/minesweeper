@@ -215,6 +215,22 @@ void reveal_cell(struct Game *game, int x, int y) {
 }
 
 /*
+ * Set the specified cell to a flag if it is currently unknown, and set it to
+ * unknown if it is currently a flag
+ */
+void toggle_flag(struct Grid *grid, int x, int y) {
+    int cell_value = get_cell(grid, x, y);
+
+    if (cell_value == CELL_TYPE_UNKNOWN) {
+        set_cell(grid, x, y, CELL_TYPE_FLAG);
+    }
+
+    else if (cell_value == CELL_TYPE_FLAG) {
+        set_cell(grid, x, y, CELL_TYPE_UNKNOWN);
+    }
+}
+
+/*
  * Return 1 if the game has been won (i.e. all the remaining unrevealed cells
  * contain a mine), or 0 otherwise
  */

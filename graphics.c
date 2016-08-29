@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <string.h>
 
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
@@ -8,6 +9,15 @@
 #include "minesweeper.h"
 #include "graphics.h"
 
+#define FONT_NAME "DejaVuSans.ttf"
+#define TITLE_FONT_SIZE 20
+#define BUTTON_FONT_SIZE 15
+
+// The vertical space between each button
+#define BUTTON_MARGIN 30
+// The vertical space between the text and the sides of the button
+#define BUTTON_PADDING 10
+
 // Colours
 ALLEGRO_COLOR line_colour;
 ALLEGRO_COLOR mine_colour;
@@ -16,7 +26,9 @@ ALLEGRO_COLOR no_mines_colour;
 ALLEGRO_COLOR nearby_mines_colour[8];
 ALLEGRO_COLOR flag_colour;
 
-ALLEGRO_FONT *font;
+ALLEGRO_FONT *cell_font;
+ALLEGRO_FONT *title_font;
+ALLEGRO_FONT *button_font;
 
 /*
  * Initialise allegro and any allegro addons, and create a display and event
@@ -39,6 +51,8 @@ int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
         fprintf(stderr, "Failed to initialise TTF font addon\n");
         return 0;
     }
+    title_font = al_load_ttf_font(FONT_NAME, TITLE_FONT_SIZE, 0);
+    button_font = al_load_ttf_font(FONT_NAME, BUTTON_FONT_SIZE, 0);
 
     if (!al_install_mouse()) {
         fprintf(stderr, "Failed to install mouse\n");
@@ -117,7 +131,7 @@ void draw_cell(struct Game *game, int x, int y) {
 
     if (text != 0) {
         char string[] = {text};
-        al_draw_text(font, al_map_rgb(0, 0, 0), sx, sy, 0, string);
+        al_draw_text(cell_font, al_map_rgb(0, 0, 0), sx, sy, 0, string);
     }
 }
 
@@ -126,7 +140,7 @@ void draw_cell(struct Game *game, int x, int y) {
  */
 void draw_grid(struct Game *game) {
 
-    font = al_load_ttf_font("DejaVuSans.ttf", game->cell_size, 0);
+    cell_font = al_load_ttf_font(FONT_NAME, game->cell_size, 0);
 
     // Draw the cells
     for (int i=0; i<game->grid.width; i++) {
@@ -151,4 +165,63 @@ void draw_grid(struct Game *game) {
     }
 
     al_flip_display();
+}
+
+/*
+ * Set up the id, label and coordinates of a button
+ */
+void create_button(struct Button *button, int id, char *label, int x, int y) {
+    button->id = id;
+    strncpy(button->label, label, MAX_BUTTON_LENGTH);
+    button->x = x;
+    button->y = y;
+}
+
+/*
+ * Calculate the coordinates of the corners of the rectangle for a given button.
+ * The top left coordinates are stored in x1, y1, and bottom right in x2, y2
+ */
+void get_button_rect(struct Button *button, int *x1, int *y1, int *x2, int *y2) {
+    int bbx, bby, width, height;
+    al_get_text_dimensions(button_font, button->label, &bbx, &bby, &width,
+                           &height);
+
+    *x1 = button->x - 0.5 * width - BUTTON_PADDING;
+    *y1 = button->y - 0.5 * height - BUTTON_PADDING;
+    *x2 = *x1 + width + 2 * BUTTON_PADDING;
+    *y2 = *y1 + height + 2 * BUTTON_PADDING;
+}
+
+/*
+ * Draw the provided button to the screen
+ */
+void draw_button(struct Button *button) {
+    int x1, x2, y1, y2;
+    get_button_rect(button, &x1, &y1, &x2, &y2);
+
+    al_draw_filled_rectangle(x1, y1, x2, y2, al_map_rgb(200, 200, 200));
+
+    al_draw_text(button_font, al_map_rgb(0, 0, 0), x1 + BUTTON_PADDING,
+                 y1 + BUTTON_PADDING, 0, button->label);
+
+}
+
+/*
+ * Work out if a button in the array of buttons is at the specified coordinates.
+ * Return the ID of the clicked button, or -1 if no button was found
+ */
+int get_clicked_button(struct Button *buttons, int count, int mouse_x,
+                       int mouse_y) {
+
+    for (int i=0; i<count; i++) {
+        int x1, x2, y1, y2;
+        get_button_rect(&(buttons[i]), &x1, &y1, &x2, &y2);
+
+        if (mouse_x >= x1 && mouse_x <= x2 && mouse_y >= y1 && mouse_y <= y2) {
+            return buttons[i].id;
+        }
+    }
+
+    // No button was clicked - return -1;
+    return -1;
 }

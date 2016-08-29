@@ -243,3 +243,10 @@ int won_game(struct Game *game) {
         return 0;
     }
 }
+
+/*
+ * Return 1 if the game is lost (i.e. a mine has been exploded), or 0 otherwise
+ */
+int lost_game(struct Game *game) {
+    return game->mine_exploded;
+}

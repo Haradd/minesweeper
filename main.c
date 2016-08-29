@@ -6,8 +6,8 @@
 #include "minesweeper.h"
 #include "graphics.h"
 
-#define DISPLAY_WIDTH 700
-#define DISPLAY_HEIGHT 500
+#define DISPLAY_WIDTH 900
+#define DISPLAY_HEIGHT 700
 
 /*
  * Work out if the clicked point is inside a cell, and put the cell coordinates
@@ -43,23 +43,29 @@ int main(int argc, char **args) {
         return -1;
     }
 
-    // Game settings are hardcoded for now...
-    int width = 8;
-    int height = 8;
-    int mine_count = 10;
-
     struct Game game;
-    if (!init_game(&game, width, height, mine_count, DISPLAY_WIDTH,
-                   DISPLAY_HEIGHT)) {
+    int game_started = 0;
 
-        fprintf(stderr, "Error initialising game\n");
-        return -1;
-    }
+    // Create the main menu buttons
+    // TODO: Make this nicer!
+    int center_x = DISPLAY_WIDTH / 2;
+    int button_y = DISPLAY_HEIGHT / 4;
+    struct Button menu_buttons[3];
+    int small_button = 1;
+    int medium_button = 2;
+    int custom_button = 3;
+    create_button(&(menu_buttons[0]), small_button, "Small", center_x, button_y);
+    create_button(&(menu_buttons[1]), medium_button, "Medium", center_x, 2 * button_y);
+    create_button(&(menu_buttons[2]), custom_button, "Custom", center_x, 3 * button_y);
 
-    draw_grid(&game);
+    draw_button(&(menu_buttons[0]));
+    draw_button(&(menu_buttons[1]));
+    draw_button(&(menu_buttons[2]));
 
-    int running = 1;
-    while (running) {
+    al_flip_display();
+
+    // Main loop
+    while (1) {
 
         ALLEGRO_EVENT event;
         ALLEGRO_TIMEOUT timeout;
@@ -77,29 +83,63 @@ int main(int argc, char **args) {
 
             // Handle mouse clicks
             else if (event.type == ALLEGRO_EVENT_MOUSE_BUTTON_UP) {
-                int x, y;
-                if (get_clicked_cell(&game, event.mouse.x, event.mouse.y,
-                                     &x, &y)) {
 
-                    // Left click - reveal the cell
-                    if (event.mouse.button == 1) {
-                        reveal_cell(&game, x, y);
+                if (game_started) {
+                    int x, y;
+                    if (get_clicked_cell(&game, event.mouse.x, event.mouse.y,
+                                         &x, &y)) {
+
+                        // Left click - reveal the cell
+                        if (event.mouse.button == 1) {
+                            reveal_cell(&game, x, y);
+                        }
+                        // Right click - toggle flag
+                        else if (event.mouse.button == 2) {
+                            toggle_flag(&(game.grid), x, y);
+                        }
+
+                        draw_grid(&game);
+
+                        if (lost_game(&game)) {
+                            printf("You hit a mine!\n");
+                            return 0;
+                        }
+
+                        if (won_game(&game)) {
+                            printf("You won!\n");
+                            return 0;
+                        }
                     }
-                    // Right click - toggle flag
-                    else if (event.mouse.button == 2) {
-                        toggle_flag(&(game.grid), x, y);
-                    }
+                }
+                else {
 
-                    draw_grid(&game);
+                    int button_id = get_clicked_button(menu_buttons, 3,
+                                                       event.mouse.x,
+                                                       event.mouse.y);
 
-                    if (game.mine_exploded) {
-                        printf("You hit a mine!\n");
-                        return 0;
-                    }
+                    if (button_id > 0) {
+                        int width, height, mine_count;
 
-                    if (won_game(&game)) {
-                        printf("You won!\n");
-                        return 0;
+                        if (button_id == small_button) {
+                            width = 8;
+                            height = 8;
+                            mine_count = 10;
+                        }
+                        else if (button_id == medium_button) {
+                            width = 16;
+                            height = 16;
+                            mine_count = 30;
+                        }
+
+                        // Start game
+                        if (!init_game(&game, width, height, mine_count, DISPLAY_WIDTH,
+                                       DISPLAY_HEIGHT)) {
+
+                            fprintf(stderr, "Error initialising game\n");
+                            return -1;
+                        }
+                        draw_grid(&game);
+                        game_started = 1;
                     }
                 }
             }

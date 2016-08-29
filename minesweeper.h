@@ -25,10 +25,8 @@ struct Game {
 
 int init_game(struct Game *game, int width, int height, int mine_count,
               int display_width, int display_height);
-void read_coordinates(struct Grid *grid, int *x, int *y);
 void reveal_cell(struct Game *game, int x, int y);
 int won_game(struct Game *game);
 int get_cell(struct Grid *grid, int x, int y);
-int valid_coords(struct Grid *grid, int x, int y);
 
 #endif

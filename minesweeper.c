@@ -4,28 +4,8 @@
 
 #include "minesweeper.h"
 
-#define COLUMN_SEPERATOR '|'
-#define ROW_SEPERATOR    '='
-#define JOIN_SEPERATOR   '+'
-
-#define MAX_WIDTH  26
+#define MAX_WIDTH  99
 #define MAX_HEIGHT 99
-
-/*
- * Return the width of the decimal representation of the integer n
- */
-int int_width(int n) {
-    if (n == 0) {
-        return 1;
-    }
-
-    int width = 0;
-    while (n != 0) {
-        n /= 10;
-        width++;
-    }
-    return width;
-}
 
 /*
  * Check that the provided coordinates are in range. Return 1 if they are,
@@ -184,10 +164,10 @@ int init_game(struct Game *game, int width, int height, int mine_count,
 }
 
 /*
- * Reveal a cell. If the cell contains a mine, show a message and exit the
- * program. If there are any adjacent mines, show the number and return.
- * If there are no adjacent mines, recursively reveal all adjacent cells that
- * have not already been revealed
+ * Reveal a cell. If the cell contains a mine, set the mine_exploded flag and
+ * return. If there are any adjacent mines, set the cell to the number and
+ * return. If there are no adjacent mines, recursively reveal all adjacent cells
+ * that have not already been revealed
  */
 void reveal_cell(struct Game *game, int x, int y) {
     if (is_mine(game, x, y)) {
@@ -245,55 +225,5 @@ int won_game(struct Game *game) {
     }
     else {
         return 0;
-    }
-}
-
-/*
- * Read a pair of coordinates from the user (e.g. A5) and store them at the
- * location pointed to by x and y (e.g. x=0, y=4)
- *
- * @TODO: Fix bug: clear stdin on error, but in a way that means you don't have
- * enter a new line if you didn't type > 3 chars
- */
-void read_coordinates(struct Grid *grid, int *x_ptr, int *y_ptr) {
-    while (1) {
-        printf("Enter coords: ");
-
-        char input_string[4];
-        fgets(input_string, 4, stdin);
-
-        // The first character should be a letter describing the x-coordinate
-        int x;
-        if (input_string[0] >= 'A' && input_string[0] <= 'Z') {
-            x = input_string[0] - 'A';
-        }
-        else if (input_string[0] >= 'a' && input_string[0] <= 'z') {
-            x = input_string[0] - 'a';
-        }
-        else {
-            // The character was not alphabetic
-            printf("Invalid character '%c'\n", input_string[0]);
-            continue;
-        }
-
-        char y_string[3];
-        memccpy(y_string, input_string + 1, '\0', 3);
-
-        int y;
-        if (sscanf(y_string, "%d", &y) != 1) {
-            printf("Invalid coordinate '%s'\n", y_string);
-            continue;
-        }
-        y--;  // Decrease by 1 since we display the first row as y=1 to the user
-
-        if (!valid_coords(grid, x, y)) {
-            printf("Coordinates out of range\n");
-            continue;
-        }
-
-        // If we have reached here then the coordinates must be valid
-        *x_ptr = x;
-        *y_ptr = y;
-        break;
     }
 }

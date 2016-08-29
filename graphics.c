@@ -8,9 +8,6 @@
 #include "minesweeper.h"
 #include "graphics.h"
 
-ALLEGRO_DISPLAY *display = NULL;
-ALLEGRO_EVENT_QUEUE *event_queue = NULL;
-
 // Colours
 ALLEGRO_COLOR line_colour;
 ALLEGRO_COLOR mine_colour;
@@ -22,9 +19,11 @@ ALLEGRO_FONT *font;
 
 /*
  * Initialise allegro and any allegro addons, and create a display and event
- * queue
+ * queue. Return 1 if successful, 0 otherwise
  */
-int init_allegro(int width, int height) {
+int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
+                 ALLEGRO_EVENT_QUEUE **event_queue) {
+
     if (!al_init()) {
         fprintf(stderr, "Failed to initialise allegro\n");
         return 0;
@@ -40,18 +39,26 @@ int init_allegro(int width, int height) {
         return 0;
     }
 
+    if (!al_install_mouse()) {
+        fprintf(stderr, "Failed to install mouse\n");
+        return 0;
+    }
+
     // Create the display
-    display = NULL;
-    display = al_create_display(width, height);
-    if (!display) {
+    *display = al_create_display(width, height);
+    if (!(*display)) {
         fprintf(stderr, "Failed to create display\n");
         return 0;
     }
 
     // Create and register the event queue
-    event_queue = NULL;
-    event_queue = al_create_event_queue();
-    al_register_event_source(event_queue, al_get_display_event_source(display));
+    *event_queue = al_create_event_queue();
+    if (!(*event_queue)) {
+        fprintf(stderr, "Failed to create event queue\n");
+        return 0;
+    }
+    al_register_event_source(*event_queue, al_get_display_event_source(*display));
+    al_register_event_source(*event_queue, al_get_mouse_event_source());
 
     // Create the colours
     line_colour = al_map_rgb(10, 10, 10);
@@ -124,15 +131,16 @@ void draw_grid(struct Game *game) {
     // Draw grid lines
     for (int i=0; i<game->grid.width; i++) {
         int x = game->x_padding + i * game->cell_size;
-        al_draw_line(x, 0, x,
+        al_draw_line(x, game->y_padding, x,
                      game->y_padding + game->grid.height * game->cell_size,
                      line_colour, 3);
     }
 
     for (int i=0; i<game->grid.height; i++) {
         int y = game->y_padding + i * game->cell_size;
-        al_draw_line(0, y, game->x_padding + game->grid.width * game->cell_size,
-                     y, line_colour, 3);
+        al_draw_line(game->x_padding, y,
+                     game->x_padding + game->grid.width * game->cell_size, y,
+                     line_colour, 3);
     }
 
     al_flip_display();

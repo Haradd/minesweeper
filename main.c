@@ -9,31 +9,6 @@
 #define DISPLAY_WIDTH 900
 #define DISPLAY_HEIGHT 700
 
-/*
- * Work out if the clicked point is inside a cell, and put the cell coordinates
- * in the addresses pointed to by x_ptr and y_ptr. Return 1 if a cell was
- * clicked, 0 otherwise
- */
-int get_clicked_cell(struct Game *game, int mouse_x, int mouse_y, int *x_ptr,
-                     int *y_ptr) {
-
-    int x_offset = mouse_x - game->x_padding;
-    int y_offset = mouse_y - game->y_padding;
-
-    // If the click was within the grid area...
-    if (x_offset >= 0 && x_offset <= game->grid.width * game->cell_size &&
-        y_offset >= 0 && y_offset <= game->grid.height * game->cell_size) {
-
-        *x_ptr = x_offset / game->cell_size;
-        *y_ptr = y_offset / game->cell_size;
-
-        return 1;
-    }
-    else {
-        return 0;
-    }
-}
-
 int main(int argc, char **args) {
     srand(time(NULL));
 

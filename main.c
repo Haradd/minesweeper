@@ -70,10 +70,10 @@ int main(int argc, char **args) {
                         }
                         // Right click - toggle flag
                         else if (event.mouse.button == 2) {
-                            toggle_flag(&(game.grid), x, y);
+                            toggle_flag(&game, x, y);
                         }
 
-                        draw_grid(&game);
+                        draw_game(&game);
 
                         if (lost_game(&game)) {
                             printf("You hit a mine!\n");
@@ -113,7 +113,7 @@ int main(int argc, char **args) {
                             fprintf(stderr, "Error initialising game\n");
                             return -1;
                         }
-                        draw_grid(&game);
+                        draw_game(&game);
                         game_started = 1;
                     }
                 }

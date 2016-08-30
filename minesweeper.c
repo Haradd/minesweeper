@@ -11,8 +11,8 @@
  * Check that the provided coordinates are in range. Return 1 if they are,
  * 0 otherwise
  */
-int valid_coords(struct Grid *grid, int x, int y) {
-     if (x >= 0 && x < grid->width && y >= 0 && y < grid->height) {
+int valid_coords(struct Game *game, int x, int y) {
+     if (x >= 0 && x < game->width && y >= 0 && y < game->height) {
         return 1;
      }
      else {
@@ -21,20 +21,21 @@ int valid_coords(struct Grid *grid, int x, int y) {
 }
 
 /*
- * Return the value of the cell x, y for the specified grid
+ * Return the value of the cell x, y in the grid for the specified game
  */
-int get_cell(struct Grid *grid, int x, int y) {
-    if (valid_coords(grid, x, y)) {
-        return grid->cells[x + y * grid->width];
+int get_cell(struct Game *game, int x, int y) {
+    if (valid_coords(game, x, y)) {
+        return game->cells[x + y * game->width];
     }
 }
 
 /*
- * Set the value of a cell in the grid. Return 1 if set succesfully, 0 otherwise
+ * Set the value of a cell in the grid for the specified game. Return 1 if set
+ * succesfully, 0 otherwise
  */
-int set_cell(struct Grid *grid, int x, int y, int value) {
-    if (valid_coords(grid, x, y)) {
-        grid->cells[x + y * grid->width] = value;
+int set_cell(struct Game *game, int x, int y, int value) {
+    if (valid_coords(game, x, y)) {
+        game->cells[x + y * game->width] = value;
         return 1;
     }
     else {
@@ -47,9 +48,9 @@ int set_cell(struct Grid *grid, int x, int y, int value) {
  */
 void show_mines(struct Game *game) {
     for (int i=0; i<game->mine_count; i++) {
-        int x = game->mines[i] % game->grid.width;
-        int y = game->mines[i] / game->grid.width;
-        set_cell(&(game->grid), x, y, CELL_TYPE_MINE);
+        int x = game->mines[i] % game->width;
+        int y = game->mines[i] / game->width;
+        set_cell(game, x, y, CELL_TYPE_MINE);
     }
 }
 
@@ -57,7 +58,7 @@ void show_mines(struct Game *game) {
  * Return 1 if there is a mine at the specified coordinates, 0 otherwise
  */
 int is_mine(struct Game *game, int x, int y) {
-    int position = x + y * game->grid.width;
+    int position = x + y * game->width;
     for (int i=0; i<game->mine_count; i++) {
         if (game->mines[i] == position) {
             return 1;
@@ -81,7 +82,7 @@ int adjacent_mines(struct Game *game, int x, int y) {
             }
 
             // Skip if this cell is not in the grid
-            if (!valid_coords(&(game->grid), x + dx, y + dy)) {
+            if (!valid_coords(game, x + dx, y + dy)) {
                 continue;
             }
 
@@ -95,37 +96,26 @@ int adjacent_mines(struct Game *game, int x, int y) {
 }
 
 /*
- * Initialise the grid, setting the value of each cell to seed. Return 1 if
- * successful, 0 otherwise
- */
-int init_grid(struct Grid *grid, int width, int height, int seed) {
-    if (width < 1 || width > MAX_WIDTH || height < 1 || height > MAX_HEIGHT) {
-        printf("Invalid grid dimensions\n");
-        return 0;
-    }
-
-    grid->width = width;
-    grid->height = height;
-
-    grid->cells = malloc(sizeof(int) * grid->width * grid->height);
-    for (int y=0; y<grid->height; y++) {
-        for (int x=0; x<grid->width; x++) {
-            set_cell(grid, x, y, seed);
-        }
-    }
-
-    return 1;
-}
-
-/*
  * Initialise the minesweeper game and place mines. Return 1 if succesful, 0
  * otherwise
  */
 int init_game(struct Game *game, int width, int height, int mine_count,
               int display_width, int display_height) {
 
-    if (!init_grid(&(game->grid), width, height, CELL_TYPE_UNKNOWN)) {
+    // Initialise the grid
+    if (width < 1 || width > MAX_WIDTH || height < 1 || height > MAX_HEIGHT) {
+        printf("Invalid grid dimensions\n");
         return 0;
+    }
+
+    game->width = width;
+    game->height = height;
+
+    game->cells = malloc(sizeof(int) * game->width * game->height);
+    for (int y=0; y<game->height; y++) {
+        for (int x=0; x<game->width; x++) {
+            set_cell(game, x, y, CELL_TYPE_UNKNOWN);
+        }
     }
 
     game->mine_count = mine_count;
@@ -153,12 +143,12 @@ int init_game(struct Game *game, int width, int height, int mine_count,
     }
 
     // Calculate cell width in px and grid offset
-    int x = display_width / game->grid.width;
-    int y = display_height / game->grid.height;
+    int x = display_width / game->width;
+    int y = display_height / game->height;
     game->cell_size = (x < y ? x : y);
 
-    game->x_padding = (display_width - game->cell_size * game->grid.width) / 2;
-    game->y_padding = (display_height - game->cell_size * game->grid.height) / 2;
+    game->x_padding = (display_width - game->cell_size * game->width) / 2;
+    game->y_padding = (display_height - game->cell_size * game->height) / 2;
 
     return 1;
 }
@@ -188,7 +178,7 @@ void reveal_cell(struct Game *game, int x, int y) {
             cell_value = n;
         }
 
-        set_cell(&(game->grid), x, y, cell_value);
+        set_cell(game, x, y, cell_value);
 
         if (n == 0) {
             for (int dx=-1; dx<=1; dx++) {
@@ -198,12 +188,12 @@ void reveal_cell(struct Game *game, int x, int y) {
                     int newY = y + dy;
 
                     // Skip if (x + dx, y + dy) is not in the grid
-                    if (!valid_coords(&(game->grid), newX, newY)) {
+                    if (!valid_coords(game, newX, newY)) {
                         continue;
                     }
 
                     // Skip this cell if it has already been revealed
-                    if (get_cell(&(game->grid), newX, newY) != CELL_TYPE_UNKNOWN) {
+                    if (get_cell(game, newX, newY) != CELL_TYPE_UNKNOWN) {
                         continue;
                     }
 
@@ -218,15 +208,15 @@ void reveal_cell(struct Game *game, int x, int y) {
  * Set the specified cell to a flag if it is currently unknown, and set it to
  * unknown if it is currently a flag
  */
-void toggle_flag(struct Grid *grid, int x, int y) {
-    int cell_value = get_cell(grid, x, y);
+void toggle_flag(struct Game *game, int x, int y) {
+    int cell_value = get_cell(game, x, y);
 
     if (cell_value == CELL_TYPE_UNKNOWN) {
-        set_cell(grid, x, y, CELL_TYPE_FLAG);
+        set_cell(game, x, y, CELL_TYPE_FLAG);
     }
 
     else if (cell_value == CELL_TYPE_FLAG) {
-        set_cell(grid, x, y, CELL_TYPE_UNKNOWN);
+        set_cell(game, x, y, CELL_TYPE_UNKNOWN);
     }
 }
 
@@ -235,7 +225,7 @@ void toggle_flag(struct Grid *grid, int x, int y) {
  * contain a mine), or 0 otherwise
  */
 int won_game(struct Game *game) {
-    int n = game->grid.width * game->grid.height - game->mine_count;
+    int n = game->width * game->height - game->mine_count;
     if (game->cells_revealed == n) {
         return 1;
     }

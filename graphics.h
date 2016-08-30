@@ -13,7 +13,7 @@ struct Button {
 };
 
 int init_allegro();
-void draw_grid(struct Game *game);
+void draw_game(struct Game *game);
 void create_button(struct Button *button, int id, char *label, int x, int y);
 void draw_button(struct Button *button);
 

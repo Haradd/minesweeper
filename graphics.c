@@ -97,7 +97,7 @@ int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
  * Draw an individual cell to the screen
  */
 void draw_cell(struct Game *game, int x, int y) {
-    int value = get_cell(&(game->grid), x, y);
+    int value = get_cell(game, x, y);
 
     char text = 0;
     ALLEGRO_COLOR c;
@@ -138,29 +138,29 @@ void draw_cell(struct Game *game, int x, int y) {
 /*
  * Draw the actual minesweeper grid to the screen
  */
-void draw_grid(struct Game *game) {
+void draw_game(struct Game *game) {
 
     cell_font = al_load_ttf_font(FONT_NAME, game->cell_size, 0);
 
     // Draw the cells
-    for (int i=0; i<game->grid.width; i++) {
-        for (int j=0; j<game->grid.height; j++) {
+    for (int i=0; i<game->width; i++) {
+        for (int j=0; j<game->height; j++) {
             draw_cell(game, i, j);
         }
     }
 
     // Draw grid lines
-    for (int i=0; i<game->grid.width; i++) {
+    for (int i=0; i<game->width; i++) {
         int x = game->x_padding + i * game->cell_size;
         al_draw_line(x, game->y_padding, x,
-                     game->y_padding + game->grid.height * game->cell_size,
+                     game->y_padding + game->height * game->cell_size,
                      line_colour, 3);
     }
 
-    for (int i=0; i<game->grid.height; i++) {
+    for (int i=0; i<game->height; i++) {
         int y = game->y_padding + i * game->cell_size;
         al_draw_line(game->x_padding, y,
-                     game->x_padding + game->grid.width * game->cell_size, y,
+                     game->x_padding + game->width * game->cell_size, y,
                      line_colour, 3);
     }
 
@@ -238,8 +238,8 @@ int get_clicked_cell(struct Game *game, int mouse_x, int mouse_y, int *x_ptr,
     int y_offset = mouse_y - game->y_padding;
 
     // If the click was within the grid area...
-    if (x_offset >= 0 && x_offset <= game->grid.width * game->cell_size &&
-        y_offset >= 0 && y_offset <= game->grid.height * game->cell_size) {
+    if (x_offset >= 0 && x_offset <= game->width * game->cell_size &&
+        y_offset >= 0 && y_offset <= game->height * game->cell_size) {
 
         *x_ptr = x_offset / game->cell_size;
         *y_ptr = y_offset / game->cell_size;

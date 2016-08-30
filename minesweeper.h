@@ -6,14 +6,10 @@
 #define CELL_TYPE_NO_MINES -3
 #define CELL_TYPE_FLAG -4
 
-struct Grid {
+struct Game {
     int width;
     int height;
     int *cells;
-};
-
-struct Game {
-    struct Grid grid;
     int mine_count;
     int *mines;
     int cells_revealed;
@@ -29,7 +25,7 @@ int init_game(struct Game *game, int width, int height, int mine_count,
 void reveal_cell(struct Game *game, int x, int y);
 int won_game(struct Game *game);
 int lost_game(struct Game *game);
-int get_cell(struct Grid *grid, int x, int y);
-void toggle_flag(struct Grid *grid, int x, int y);
+int get_cell(struct Game *game, int x, int y);
+void toggle_flag(struct Game *game, int x, int y);
 
 #endif

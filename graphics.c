@@ -25,6 +25,7 @@ ALLEGRO_COLOR unknown_colour;
 ALLEGRO_COLOR no_mines_colour;
 ALLEGRO_COLOR nearby_mines_colour[8];
 ALLEGRO_COLOR flag_colour;
+ALLEGRO_COLOR background_colour;
 
 ALLEGRO_FONT *cell_font;
 ALLEGRO_FONT *title_font;
@@ -89,6 +90,7 @@ int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
     nearby_mines_colour[6] = al_map_rgb(200, 200, 200);
     nearby_mines_colour[7] = al_map_rgb(200, 50, 200);
     flag_colour = al_map_rgb(255, 0, 100);
+    background_colour = al_map_rgb(0, 0, 0);
 
     return 1;
 }
@@ -141,6 +143,9 @@ void draw_cell(struct Game *game, int x, int y) {
 void draw_game(struct Game *game) {
 
     cell_font = al_load_ttf_font(FONT_NAME, game->cell_size, 0);
+
+    // Draw background
+    al_clear_to_color(background_colour);
 
     // Draw the cells
     for (int i=0; i<game->width; i++) {

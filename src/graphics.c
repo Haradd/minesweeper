@@ -9,7 +9,7 @@
 #include "minesweeper.h"
 #include "graphics.h"
 
-#define FONT_NAME "DejaVuSans.ttf"
+#define FONT_NAME "assets/DejaVuSans.ttf"
 #define TITLE_FONT_SIZE 20
 #define BUTTON_FONT_SIZE 15
 

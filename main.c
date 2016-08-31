@@ -20,7 +20,12 @@ struct App {
     enum AppState state;
     struct Game game;
 
-    struct Button *main_menu_buttons;
+    struct Button small_game_button;
+    struct Button medium_game_button;
+    struct Button large_game_button;
+
+    // An array of pointers to buttons for the main menu
+    struct Button *main_menu_buttons[3];
 };
 
 /*
@@ -28,19 +33,21 @@ struct App {
  */
 void init_app(struct App *app) {
     app->state = MAIN_MENU;
-    app->main_menu_buttons = malloc(sizeof(struct Button) * 3);
 
-    // Create the main menu buttons
-    // TODO: Make this nicer!
-    int center_x = DISPLAY_WIDTH / 2;
-    int button_y = DISPLAY_HEIGHT / 4;
-    create_button(&(app->main_menu_buttons[0]), 1, "Small", center_x, button_y);
-    create_button(&(app->main_menu_buttons[1]), 2, "Medium", center_x, 2 * button_y);
-    create_button(&(app->main_menu_buttons[2]), 3, "Custom", center_x, 3 * button_y);
+    // // Create the main menu buttons
+    strcpy(app->small_game_button.label, "Small");
+    strcpy(app->medium_game_button.label, "Medium");
+    strcpy(app->large_game_button.label, "Large");
+    app->main_menu_buttons[0] = &(app->small_game_button);
+    app->main_menu_buttons[1] = &(app->medium_game_button);
+    app->main_menu_buttons[2] = &(app->large_game_button);
 
-    draw_button(&(app->main_menu_buttons[0]));
-    draw_button(&(app->main_menu_buttons[1]));
-    draw_button(&(app->main_menu_buttons[2]));
+     for (int i=0; i<3; i++) {
+        app->main_menu_buttons[i]->x = DISPLAY_WIDTH / 2;
+        app->main_menu_buttons[i]->y = (i + 1) * DISPLAY_HEIGHT / 4;
+
+        draw_button(app->main_menu_buttons[i]);
+     }
 }
 
 /*
@@ -76,16 +83,17 @@ void handle_click(struct App *app, int mouse_x, int mouse_y, int mouse_button) {
     }
     else  if (app->state == MAIN_MENU) {
 
-        int button_id = get_clicked_button(app->main_menu_buttons, 3, mouse_x, mouse_y);
-        if (button_id > 0) {
+        struct Button *button = get_clicked_button(app->main_menu_buttons, 3,
+                                                   mouse_x, mouse_y);
+        if (button != NULL) {
             int width, height, mine_count;
 
-            if (button_id == 1) {
-                width = 80;
+            if (button == &(app->small_game_button)) {
+                width = 8;
                 height = 8;
                 mine_count = 10;
             }
-            else if (button_id == 2) {
+            else if (button == &(app->medium_game_button)) {
                 width = 16;
                 height = 16;
                 mine_count = 30;

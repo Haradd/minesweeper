@@ -173,16 +173,6 @@ void draw_game(struct Game *game) {
 }
 
 /*
- * Set up the id, label and coordinates of a button
- */
-void create_button(struct Button *button, int id, char *label, int x, int y) {
-    button->id = id;
-    strncpy(button->label, label, MAX_BUTTON_LENGTH);
-    button->x = x;
-    button->y = y;
-}
-
-/*
  * Calculate the coordinates of the corners of the rectangle for a given button.
  * The top left coordinates are stored in x1, y1, and bottom right in x2, y2
  */
@@ -212,23 +202,24 @@ void draw_button(struct Button *button) {
 }
 
 /*
- * Work out if a button in the array of buttons is at the specified coordinates.
- * Return the ID of the clicked button, or -1 if no button was found
+ * Work out if a button in the array of buttons pointers is at the specified
+ * coordinates. Return a pointer to the clicked button, or NULL if no button was
+ * found
  */
-int get_clicked_button(struct Button *buttons, int count, int mouse_x,
-                       int mouse_y) {
+struct Button *get_clicked_button(struct Button **buttons, int count, int mouse_x,
+                                  int mouse_y) {
 
     for (int i=0; i<count; i++) {
         int x1, x2, y1, y2;
-        get_button_rect(&(buttons[i]), &x1, &y1, &x2, &y2);
+        get_button_rect(buttons[i], &x1, &y1, &x2, &y2);
 
         if (mouse_x >= x1 && mouse_x <= x2 && mouse_y >= y1 && mouse_y <= y2) {
-            return buttons[i].id;
+            return buttons[i];
         }
     }
 
-    // No button was clicked - return -1;
-    return -1;
+    // No button was clicked
+    return NULL;
 }
 
 /*

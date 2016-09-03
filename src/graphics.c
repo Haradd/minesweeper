@@ -9,14 +9,17 @@
 #include "minesweeper.h"
 #include "graphics.h"
 
-#define FONT_NAME "assets/DejaVuSans.ttf"
+#define GRAPHICS_FPS 30
+
+// TODO: Fix this
+#define FONT_NAME "/home/joe/Coding/minesweeper/assets/DejaVuSans.ttf"
 #define TITLE_FONT_SIZE 20
-#define BUTTON_FONT_SIZE 15
+#define BUTTON_FONT_SIZE 30
 
 // The vertical space between each button
 #define BUTTON_MARGIN 30
 // The vertical space between the text and the sides of the button
-#define BUTTON_PADDING 10
+#define BUTTON_PADDING 30
 
 // Colours
 ALLEGRO_COLOR line_colour;
@@ -26,6 +29,9 @@ ALLEGRO_COLOR no_mines_colour;
 ALLEGRO_COLOR nearby_mines_colour[8];
 ALLEGRO_COLOR flag_colour;
 ALLEGRO_COLOR background_colour;
+ALLEGRO_COLOR button_background_colour;
+ALLEGRO_COLOR button_hover_colour;
+ALLEGRO_COLOR button_text_colour;
 
 ALLEGRO_FONT *cell_font;
 ALLEGRO_FONT *title_font;
@@ -36,7 +42,7 @@ ALLEGRO_FONT *button_font;
  * queue. Return 1 if successful, 0 otherwise
  */
 int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
-                 ALLEGRO_EVENT_QUEUE **event_queue) {
+                 ALLEGRO_EVENT_QUEUE **event_queue, ALLEGRO_TIMER **timer) {
 
     if (!al_init()) {
         fprintf(stderr, "Failed to initialise allegro\n");
@@ -67,6 +73,14 @@ int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
         return 0;
     }
 
+    // Create and start the timer
+    *timer = al_create_timer(1.0 / GRAPHICS_FPS);
+    if (!(*timer)) {
+        fprintf(stderr, "Failed to create timer\n");
+        return 0;
+    }
+    al_start_timer(*timer);
+
     // Create and register the event queue
     *event_queue = al_create_event_queue();
     if (!(*event_queue)) {
@@ -75,6 +89,7 @@ int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
     }
     al_register_event_source(*event_queue, al_get_display_event_source(*display));
     al_register_event_source(*event_queue, al_get_mouse_event_source());
+    al_register_event_source(*event_queue, al_get_timer_event_source(*timer));
 
     // Create the colours
     line_colour = al_map_rgb(10, 10, 10);
@@ -91,6 +106,9 @@ int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
     nearby_mines_colour[7] = al_map_rgb(200, 50, 200);
     flag_colour = al_map_rgb(255, 0, 100);
     background_colour = al_map_rgb(0, 0, 0);
+    button_background_colour = al_map_rgb(200, 200, 200);
+    button_hover_colour = al_map_rgb(170, 170, 170);
+    button_text_colour = al_map_rgb(0, 0, 0);
 
     return 1;
 }
@@ -98,7 +116,7 @@ int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
 /*
  * Draw an individual cell to the screen
  */
-void draw_cell(struct Game *game, int x, int y) {
+void draw_cell(struct Game *game, int x, int y, int hovered) {
     int value = get_cell(game, x, y);
 
     char text = 0;
@@ -128,8 +146,17 @@ void draw_cell(struct Game *game, int x, int y) {
 
     int sx = game->x_padding + game->cell_size * x;
     int sy = game->y_padding + game->cell_size * y;
+
+    // Draw cell background colour
     al_draw_filled_rectangle(sx, sy, sx + game->cell_size, sy + game->cell_size,
                              c);
+
+    // Draw cell border
+    float line_width = hovered ? 2 : 1;
+    al_draw_rectangle(sx + line_width / 2, sy + line_width / 2,
+                      sx + game->cell_size - line_width / 2,
+                      sy + game->cell_size - line_width / 2,
+                      line_colour, line_width);
 
     if (text != 0) {
         char string[] = {text};
@@ -150,23 +177,8 @@ void draw_game(struct Game *game) {
     // Draw the cells
     for (int i=0; i<game->width; i++) {
         for (int j=0; j<game->height; j++) {
-            draw_cell(game, i, j);
+            draw_cell(game, i, j, 0);
         }
-    }
-
-    // Draw grid lines
-    for (int i=0; i<game->width; i++) {
-        int x = game->x_padding + i * game->cell_size;
-        al_draw_line(x, game->y_padding, x,
-                     game->y_padding + game->height * game->cell_size,
-                     line_colour, 3);
-    }
-
-    for (int i=0; i<game->height; i++) {
-        int y = game->y_padding + i * game->cell_size;
-        al_draw_line(game->x_padding, y,
-                     game->x_padding + game->width * game->cell_size, y,
-                     line_colour, 3);
     }
 
     al_flip_display();
@@ -190,15 +202,15 @@ void get_button_rect(struct Button *button, int *x1, int *y1, int *x2, int *y2) 
 /*
  * Draw the provided button to the screen
  */
-void draw_button(struct Button *button) {
+void draw_button(struct Button *button, int hovered) {
     int x1, x2, y1, y2;
     get_button_rect(button, &x1, &y1, &x2, &y2);
 
-    al_draw_filled_rectangle(x1, y1, x2, y2, al_map_rgb(200, 200, 200));
+    ALLEGRO_COLOR c = (hovered ? button_hover_colour : button_background_colour);
+    al_draw_filled_rectangle(x1, y1, x2, y2, c);
 
-    al_draw_text(button_font, al_map_rgb(0, 0, 0), x1 + BUTTON_PADDING,
+    al_draw_text(button_font, button_text_colour, x1 + BUTTON_PADDING,
                  y1 + BUTTON_PADDING, 0, button->label);
-
 }
 
 /*
@@ -234,8 +246,8 @@ int get_clicked_cell(struct Game *game, int mouse_x, int mouse_y, int *x_ptr,
     int y_offset = mouse_y - game->y_padding;
 
     // If the click was within the grid area...
-    if (x_offset >= 0 && x_offset <= game->width * game->cell_size &&
-        y_offset >= 0 && y_offset <= game->height * game->cell_size) {
+    if (x_offset >= 0 && x_offset < game->width * game->cell_size &&
+        y_offset >= 0 && y_offset < game->height * game->cell_size) {
 
         *x_ptr = x_offset / game->cell_size;
         *y_ptr = y_offset / game->cell_size;

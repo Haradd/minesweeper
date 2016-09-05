@@ -21,5 +21,4 @@ struct Button *get_clicked_button(struct Button **buttons, int count, int mouse_
                                   int mouse_y);
 int get_clicked_cell(struct Game *game, int mouse_x, int mouse_y, int *x_ptr,
                      int *y_ptr);
-
 #endif

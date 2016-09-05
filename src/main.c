@@ -35,12 +35,27 @@ struct App {
 };
 
 /*
- * Initialise an App struct by creating the menu buttons and setting the state
+ * A union to pass parameters to the change_app_state function
+ */
+union StateChangeParams {
+    // This is used when changing to IN_GAME state
+    struct {
+        int width;
+        int height;
+        int mine_count;
+    } game_settings;
+
+    // This is used when changing to POST_GAME
+    int won_game;
+};
+
+/*
+ * Initialise an App struct by creating the menu buttons and initialising
+ * member variables
  */
 void init_app(struct App *app) {
-    app->state = MAIN_MENU;
 
-    // // Create the main menu buttons
+    // Create the main menu buttons
     strcpy(app->small_game_button.label, "Small");
     strcpy(app->medium_game_button.label, "Medium");
     strcpy(app->large_game_button.label, "Large");
@@ -48,17 +63,55 @@ void init_app(struct App *app) {
     app->main_menu_buttons[1] = &(app->medium_game_button);
     app->main_menu_buttons[2] = &(app->large_game_button);
 
-     for (int i=0; i<3; i++) {
+    // Set the coordinates of main menu buttons
+    for (int i=0; i<3; i++) {
         app->main_menu_buttons[i]->x = DISPLAY_WIDTH / 2;
         app->main_menu_buttons[i]->y = (i + 1) * DISPLAY_HEIGHT / 4;
+    }
 
-        draw_button(app->main_menu_buttons[i], 0);
-     }
-     app->redraw_required = 1;
+    app->hovered_button = NULL;
+    app->hovered_cell = -1;
+}
 
-     app->hovered_button = NULL;
-     app->hovered_cell = -1;
+/*
+ * Change the state of the provided app and perform any necessary actions
+ * depending on the new state
+ */
+void change_app_state(struct App *app, enum AppState new_state,
+                      union StateChangeParams params) {
 
+    if (new_state == MAIN_MENU) {
+        // TODO: Draw background
+
+        // Draw main menu buttons
+        for (int i=0; i<3; i++) {
+            draw_button(app->main_menu_buttons[i], 0);
+        }
+
+        app->redraw_required = 1;
+    }
+
+    else if (new_state == IN_GAME) {
+
+        if (init_game(&(app->game), params.game_settings.width,
+                      params.game_settings.height,
+                      params.game_settings.mine_count, DISPLAY_WIDTH,
+                      DISPLAY_HEIGHT)) {
+
+            draw_game(&(app->game));
+            app->redraw_required = 1;
+        }
+        else {
+            fprintf(stderr, "Error initialising game\n");
+            app->state = ERROR;
+            return;
+        }
+    }
+
+    else if (new_state == POST_GAME_MENU) {
+    }
+
+    app->state = new_state;
 }
 
 /*
@@ -80,15 +133,18 @@ void handle_click(struct App *app, int mouse_x, int mouse_y, int mouse_button) {
             }
 
             draw_game(&(app->game));
+            app->redraw_required = 1;
 
             if (lost_game(&(app->game))) {
-                printf("You hit a mine!\n");
-                app->state = POST_GAME_MENU;
+                union StateChangeParams params;
+                params.won_game = 0;
+                change_app_state(app, POST_GAME_MENU, params);
             }
 
             if (won_game(&(app->game))) {
-                printf("You won!\n");
-                app->state = POST_GAME_MENU;
+                union StateChangeParams params;
+                params.won_game = 1;
+                change_app_state(app, POST_GAME_MENU, params);
             }
         }
     }
@@ -97,28 +153,19 @@ void handle_click(struct App *app, int mouse_x, int mouse_y, int mouse_button) {
         struct Button *button = get_clicked_button(app->main_menu_buttons, 3,
                                                    mouse_x, mouse_y);
         if (button != NULL) {
-            int width, height, mine_count;
+            union StateChangeParams params;
 
             if (button == &(app->small_game_button)) {
-                width = 8;
-                height = 8;
-                mine_count = 10;
+                params.game_settings.width = 8;
+                params.game_settings.height = 8;
+                params.game_settings.mine_count = 10;
             }
             else if (button == &(app->medium_game_button)) {
-                width = 16;
-                height = 16;
-                mine_count = 30;
+                params.game_settings.width = 16;
+                params.game_settings.height = 16;
+                params.game_settings.mine_count = 30;
             }
-
-            // Start game
-            if (!init_game(&(app->game), width, height, mine_count,
-                           DISPLAY_WIDTH, DISPLAY_HEIGHT)) {
-
-                fprintf(stderr, "Error initialising game\n");
-                app->state = ERROR;
-            }
-            draw_game(&(app->game));
-            app->state = IN_GAME;
+            change_app_state(app, IN_GAME, params);
         }
     }
 }
@@ -182,6 +229,7 @@ void handle_mouse_move(struct App *app, int mouse_x, int mouse_y) {
 int main(int argc, char **args) {
     srand(time(NULL));
 
+    // Initialise allegro related things
     ALLEGRO_DISPLAY *display;
     ALLEGRO_EVENT_QUEUE *event_queue;
     ALLEGRO_TIMER *timer;
@@ -190,8 +238,11 @@ int main(int argc, char **args) {
         return -1;
     }
 
+    // Initialise app and set state to main menu
     struct App app;
     init_app(&app);
+    union StateChangeParams params;
+    change_app_state(&app, MAIN_MENU, params);
 
     // Main loop
     while (1) {

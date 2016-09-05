@@ -180,8 +180,6 @@ void draw_game(struct Game *game) {
             draw_cell(game, i, j, 0);
         }
     }
-
-    al_flip_display();
 }
 
 /*

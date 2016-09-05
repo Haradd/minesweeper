@@ -9,6 +9,9 @@
 #define DISPLAY_WIDTH 900
 #define DISPLAY_HEIGHT 700
 
+#define MAIN_MENU_BUTTON_COUNT 3
+#define POST_GAME_MENU_BUTTON_COUNT 3
+
 enum AppState {
     MAIN_MENU,
     IN_GAME,
@@ -20,12 +23,19 @@ struct App {
     enum AppState state;
     struct Game game;
 
+    // Main menu buttons
     struct Button small_game_button;
     struct Button medium_game_button;
     struct Button large_game_button;
 
-    // An array of pointers to buttons for the main menu
-    struct Button *main_menu_buttons[3];
+    // Post-game menu buttons
+    struct Button replay_game_button;
+    struct Button go_to_main_menu_button;
+    struct Button quit_button;
+
+    // An array of pointers to buttons for the menus
+    struct Button *main_menu_buttons[MAIN_MENU_BUTTON_COUNT];
+    struct Button *post_game_menu_buttons[POST_GAME_MENU_BUTTON_COUNT];
 
     // The button/cell that is current being hovered over
     struct Button *hovered_button;
@@ -50,6 +60,15 @@ union StateChangeParams {
 };
 
 /*
+ * Exit the application with the specified status
+ *
+ * TODO: Free up memory and destory allegro things before exiting
+ */
+void exit_app(int status) {
+    exit(status);
+}
+
+/*
  * Initialise an App struct by creating the menu buttons and initialising
  * member variables
  */
@@ -63,10 +82,24 @@ void init_app(struct App *app) {
     app->main_menu_buttons[1] = &(app->medium_game_button);
     app->main_menu_buttons[2] = &(app->large_game_button);
 
-    // Set the coordinates of main menu buttons
-    for (int i=0; i<3; i++) {
+    // Create the post-game menu buttons
+    strcpy(app->replay_game_button.label, "Play again");
+    strcpy(app->go_to_main_menu_button.label, "Main menu");
+    strcpy(app->quit_button.label, "Quit");
+    app->post_game_menu_buttons[0] = &(app->replay_game_button);
+    app->post_game_menu_buttons[1] = &(app->go_to_main_menu_button);
+    app->post_game_menu_buttons[2] = &(app->quit_button);
+
+    // Set the coordinates of the buttons
+    for (int i=0; i<MAIN_MENU_BUTTON_COUNT; i++) {
         app->main_menu_buttons[i]->x = DISPLAY_WIDTH / 2;
-        app->main_menu_buttons[i]->y = (i + 1) * DISPLAY_HEIGHT / 4;
+        app->main_menu_buttons[i]->y = (i + 1) * DISPLAY_HEIGHT /
+                                       (MAIN_MENU_BUTTON_COUNT + 1);
+    }
+    for (int i=0; i<3; i++) {
+        app->post_game_menu_buttons[i]->x = DISPLAY_WIDTH / 2;
+        app->post_game_menu_buttons[i]->y = (i + 1) * DISPLAY_HEIGHT /
+                                            (POST_GAME_MENU_BUTTON_COUNT + 1);
     }
 
     app->hovered_button = NULL;
@@ -81,10 +114,12 @@ void change_app_state(struct App *app, enum AppState new_state,
                       union StateChangeParams params) {
 
     if (new_state == MAIN_MENU) {
-        // TODO: Draw background
+        app->hovered_button = NULL;
+
+        draw_background();
 
         // Draw main menu buttons
-        for (int i=0; i<3; i++) {
+        for (int i=0; i<MAIN_MENU_BUTTON_COUNT; i++) {
             draw_button(app->main_menu_buttons[i], 0);
         }
 
@@ -92,7 +127,6 @@ void change_app_state(struct App *app, enum AppState new_state,
     }
 
     else if (new_state == IN_GAME) {
-
         if (init_game(&(app->game), params.game_settings.width,
                       params.game_settings.height,
                       params.game_settings.mine_count, DISPLAY_WIDTH,
@@ -103,12 +137,21 @@ void change_app_state(struct App *app, enum AppState new_state,
         }
         else {
             fprintf(stderr, "Error initialising game\n");
-            app->state = ERROR;
-            return;
+            exit_app(EXIT_FAILURE);
         }
     }
 
     else if (new_state == POST_GAME_MENU) {
+        app->hovered_button = NULL;
+
+        // Shade over the grid
+        shade_screen(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+
+        // Draw menu buttons
+        for (int i=0; i<POST_GAME_MENU_BUTTON_COUNT; i++) {
+            draw_button(app->post_game_menu_buttons[i], 0);
+        }
+        app->redraw_required = 1;
     }
 
     app->state = new_state;
@@ -150,7 +193,8 @@ void handle_click(struct App *app, int mouse_x, int mouse_y, int mouse_button) {
     }
     else if (app->state == MAIN_MENU) {
 
-        struct Button *button = get_clicked_button(app->main_menu_buttons, 3,
+        struct Button *button = get_clicked_button(app->main_menu_buttons,
+                                                   MAIN_MENU_BUTTON_COUNT,
                                                    mouse_x, mouse_y);
         if (button != NULL) {
             union StateChangeParams params;
@@ -168,6 +212,27 @@ void handle_click(struct App *app, int mouse_x, int mouse_y, int mouse_button) {
             change_app_state(app, IN_GAME, params);
         }
     }
+    else if (app->state == POST_GAME_MENU) {
+        struct Button *button = get_clicked_button(app->post_game_menu_buttons,
+                                                   POST_GAME_MENU_BUTTON_COUNT,
+                                                   mouse_x, mouse_y);
+        if (button != NULL) {
+            union StateChangeParams params;
+
+            if (button == &(app->replay_game_button)) {
+                params.game_settings.width = app->game.width;
+                params.game_settings.height = app->game.height;
+                params.game_settings.mine_count = app->game.mine_count;
+                change_app_state(app, IN_GAME, params);
+            }
+            else if (button == &(app->go_to_main_menu_button)) {
+                change_app_state(app, MAIN_MENU, params);
+            }
+            else if (button == &(app->quit_button)) {
+                exit_app(EXIT_SUCCESS);
+            }
+        }
+    }
 }
 
 /*
@@ -175,8 +240,21 @@ void handle_click(struct App *app, int mouse_x, int mouse_y, int mouse_button) {
  * menus and cells in the game
  */
 void handle_mouse_move(struct App *app, int mouse_x, int mouse_y) {
-    if (app->state == MAIN_MENU) {
-        struct Button *button = get_clicked_button(app->main_menu_buttons, 3,
+    if (app->state == MAIN_MENU || app->state == POST_GAME_MENU) {
+
+        // Work out which buttons to check for hovering
+        struct Button **buttons;
+        int button_count;
+        if (app->state == MAIN_MENU) {
+            buttons = app->main_menu_buttons;
+            button_count = MAIN_MENU_BUTTON_COUNT;
+        }
+        else {
+            buttons = app->post_game_menu_buttons;
+            button_count = POST_GAME_MENU_BUTTON_COUNT;
+        }
+
+        struct Button *button = get_clicked_button(buttons, button_count,
                                                    mouse_x, mouse_y);
 
         if (button != app->hovered_button) {
@@ -235,7 +313,7 @@ int main(int argc, char **args) {
     ALLEGRO_TIMER *timer;
     if (!init_allegro(DISPLAY_WIDTH, DISPLAY_HEIGHT, &display, &event_queue,
                       &timer)) {
-        return -1;
+        exit_app(EXIT_FAILURE);
     }
 
     // Initialise app and set state to main menu
@@ -258,7 +336,7 @@ int main(int argc, char **args) {
         if (event_received) {
             // Close window if close button was pressed
             if (event.type == ALLEGRO_EVENT_DISPLAY_CLOSE) {
-                return 0;
+                exit_app(EXIT_SUCCESS);
             }
 
             // Handle mouse clicks

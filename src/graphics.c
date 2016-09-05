@@ -92,23 +92,23 @@ int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
     al_register_event_source(*event_queue, al_get_timer_event_source(*timer));
 
     // Create the colours
-    line_colour = al_map_rgb(10, 10, 10);
-    mine_colour = al_map_rgb(255, 0, 0);
-    unknown_colour = al_map_rgb(180, 180, 180);
-    no_mines_colour = al_map_rgb(240, 240, 240);
-    nearby_mines_colour[0] = al_map_rgb(0, 0, 200);
-    nearby_mines_colour[1] = al_map_rgb(0, 200, 0);
-    nearby_mines_colour[2] = al_map_rgb(200, 0, 0);
-    nearby_mines_colour[3] = al_map_rgb(200, 200, 0);
-    nearby_mines_colour[4] = al_map_rgb(200, 0, 200);
-    nearby_mines_colour[5] = al_map_rgb(0, 200, 200);
-    nearby_mines_colour[6] = al_map_rgb(200, 200, 200);
-    nearby_mines_colour[7] = al_map_rgb(200, 50, 200);
-    flag_colour = al_map_rgb(255, 0, 100);
-    background_colour = al_map_rgb(0, 0, 0);
+    line_colour =              al_map_rgb(10, 10, 10);
+    mine_colour =              al_map_rgb(255, 0, 0);
+    unknown_colour =           al_map_rgb(180, 180, 180);
+    no_mines_colour =          al_map_rgb(240, 240, 240);
+    nearby_mines_colour[0] =   al_map_rgb(0, 0, 200);
+    nearby_mines_colour[1] =   al_map_rgb(0, 200, 0);
+    nearby_mines_colour[2] =   al_map_rgb(200, 0, 0);
+    nearby_mines_colour[3] =   al_map_rgb(200, 200, 0);
+    nearby_mines_colour[4] =   al_map_rgb(200, 0, 200);
+    nearby_mines_colour[5] =   al_map_rgb(0, 200, 200);
+    nearby_mines_colour[6] =   al_map_rgb(200, 200, 200);
+    nearby_mines_colour[7] =   al_map_rgb(200, 50, 200);
+    flag_colour =              al_map_rgb(255, 0, 100);
+    background_colour =        al_map_rgb(0, 0, 0);
     button_background_colour = al_map_rgb(200, 200, 200);
-    button_hover_colour = al_map_rgb(170, 170, 170);
-    button_text_colour = al_map_rgb(0, 0, 0);
+    button_hover_colour =      al_map_rgb(170, 170, 170);
+    button_text_colour =       al_map_rgb(0, 0, 0);
 
     return 1;
 }
@@ -171,8 +171,7 @@ void draw_game(struct Game *game) {
 
     cell_font = al_load_ttf_font(FONT_NAME, game->cell_size, 0);
 
-    // Draw background
-    al_clear_to_color(background_colour);
+    draw_background();
 
     // Draw the cells
     for (int i=0; i<game->width; i++) {
@@ -255,4 +254,23 @@ int get_clicked_cell(struct Game *game, int mouse_x, int mouse_y, int *x_ptr,
     else {
         return 0;
     }
+}
+
+/*
+ * Draw a semi-transparent rectangle between the specified coordinates
+ */
+void shade_screen(int x1, int y1, int x2, int y2) {
+    int r = 50;
+    int g = 50;
+    int b = 50;
+    int a = 127;
+    ALLEGRO_COLOR c = al_map_rgba(r * a / 255, g * a / 255, b * a / 255, a);
+    al_draw_filled_rectangle(x1, y1,x2, y2, c);
+}
+
+/*
+ * Fill the whole display with the background colour
+ */
+void draw_background(int width, int height) {
+    al_clear_to_color(background_colour);
 }

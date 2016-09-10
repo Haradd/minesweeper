@@ -165,7 +165,8 @@ void draw_cell(struct Game *game, int x, int y, int hovered) {
 
     if (text != 0) {
         char string[] = {text};
-        al_draw_text(cell_font, text_colour, sx, sy, 0, string);
+        al_draw_text(cell_font, text_colour, sx + 0.5 * game->cell_size, sy,
+                     ALLEGRO_ALIGN_CENTRE, string);
     }
 }
 

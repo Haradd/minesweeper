@@ -7,6 +7,9 @@
 #define MAX_WIDTH  99
 #define MAX_HEIGHT 99
 
+// The minimum padding between the game grid and the edges of the display
+#define GRID_PADDING 30
+
 /*
  * Check that the provided coordinates are in range. Return 1 if they are,
  * 0 otherwise
@@ -143,8 +146,8 @@ int init_game(struct Game *game, int width, int height, int mine_count,
     }
 
     // Calculate cell width in px and grid offset
-    float x = (float) display_width / game->width;
-    float y = (float) display_height / game->height;
+    float x = (float) (display_width - 2 * GRID_PADDING) / game->width;
+    float y = (float) (display_height - 2 * GRID_PADDING) / game->height;
     game->cell_size = (x < y ? x : y);
 
     game->x_padding = (display_width - game->cell_size * game->width) / 2;

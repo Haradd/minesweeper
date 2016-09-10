@@ -122,27 +122,30 @@ void draw_cell(struct Game *game, int x, int y, int hovered) {
     int value = get_cell(game, x, y);
 
     char text = 0;
-    ALLEGRO_COLOR c;
+    ALLEGRO_COLOR text_colour;
+    ALLEGRO_COLOR cell_colour;
     switch (value) {
         case CELL_TYPE_MINE:
-            c = mine_colour;
+            cell_colour = mine_colour;
             break;
 
         case CELL_TYPE_UNKNOWN:
-            c = unknown_colour;
+            cell_colour = unknown_colour;
             break;
 
         case CELL_TYPE_NO_MINES:
-            c = no_mines_colour;
+            cell_colour = no_mines_colour;
             break;
 
         case CELL_TYPE_FLAG:
-            c = flag_colour;
+            cell_colour = no_mines_colour;
+            text_colour = flag_colour;
             text = 'F';
             break;
 
         default:
-            c = nearby_mines_colour[value - 1];
+            cell_colour = no_mines_colour;
+            text_colour = nearby_mines_colour[value - 1];
             text = value + '0';
     }
 
@@ -151,7 +154,7 @@ void draw_cell(struct Game *game, int x, int y, int hovered) {
 
     // Draw cell background colour
     al_draw_filled_rectangle(sx, sy, sx + game->cell_size, sy + game->cell_size,
-                             c);
+                             cell_colour);
 
     // Draw cell border
     float line_width = hovered ? 2 : 1;
@@ -162,7 +165,7 @@ void draw_cell(struct Game *game, int x, int y, int hovered) {
 
     if (text != 0) {
         char string[] = {text};
-        al_draw_text(cell_font, al_map_rgb(0, 0, 0), sx, sy, 0, string);
+        al_draw_text(cell_font, text_colour, sx, sy, 0, string);
     }
 }
 

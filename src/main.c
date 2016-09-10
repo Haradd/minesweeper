@@ -23,15 +23,17 @@ struct App {
     enum AppState state;
     struct Game game;
 
-    // Main menu buttons
+    // Main menu buttons and labels
     struct Button small_game_button;
     struct Button medium_game_button;
     struct Button large_game_button;
+    struct Label title_label;
 
-    // Post-game menu buttons
+    // Post-game menu buttons and labels
     struct Button replay_game_button;
     struct Button go_to_main_menu_button;
     struct Button quit_button;
+    struct Label game_result_label;
 
     // An array of pointers to buttons for the menus
     struct Button *main_menu_buttons[MAIN_MENU_BUTTON_COUNT];
@@ -90,16 +92,30 @@ void init_app(struct App *app) {
     app->post_game_menu_buttons[1] = &(app->go_to_main_menu_button);
     app->post_game_menu_buttons[2] = &(app->quit_button);
 
-    // Set the coordinates of the buttons
+    // Set up labels. Note that the text for game_result_label is set when the
+    // game ends
+    strcpy(app->title_label.text, "Minesweeper");
+    app->title_label.font_size = 60;
+    app->game_result_label.font_size = 40;
+
+    // Set the coordinates of the main menu items...
+    int spacing = DISPLAY_HEIGHT / (MAIN_MENU_BUTTON_COUNT + 2);
+    app->title_label.x = DISPLAY_WIDTH / 2;
+    app->title_label.y = spacing;
+
     for (int i=0; i<MAIN_MENU_BUTTON_COUNT; i++) {
         app->main_menu_buttons[i]->x = DISPLAY_WIDTH / 2;
-        app->main_menu_buttons[i]->y = (i + 1) * DISPLAY_HEIGHT /
-                                       (MAIN_MENU_BUTTON_COUNT + 1);
+        app->main_menu_buttons[i]->y = (i + 2) * spacing;
     }
+
+    // ...and the post-game menu items
+    spacing = DISPLAY_HEIGHT / (POST_GAME_MENU_BUTTON_COUNT + 2);
+    app->game_result_label.x = DISPLAY_WIDTH / 2;
+    app->game_result_label.y = spacing;
+
     for (int i=0; i<3; i++) {
         app->post_game_menu_buttons[i]->x = DISPLAY_WIDTH / 2;
-        app->post_game_menu_buttons[i]->y = (i + 1) * DISPLAY_HEIGHT /
-                                            (POST_GAME_MENU_BUTTON_COUNT + 1);
+        app->post_game_menu_buttons[i]->y = (i + 2) * spacing;
     }
 
     app->hovered_button = NULL;
@@ -117,6 +133,7 @@ void change_app_state(struct App *app, enum AppState new_state,
         app->hovered_button = NULL;
 
         draw_background();
+        draw_label(&(app->title_label));
 
         // Draw main menu buttons
         for (int i=0; i<MAIN_MENU_BUTTON_COUNT; i++) {
@@ -146,6 +163,11 @@ void change_app_state(struct App *app, enum AppState new_state,
 
         // Shade over the grid
         shade_screen(0, 0, DISPLAY_WIDTH, DISPLAY_HEIGHT);
+
+        // Show game result label
+        char *result_str = (params.won_game ? "You won!" : "You lost");
+        strcpy(app->game_result_label.text, result_str);
+        draw_label(&(app->game_result_label));
 
         // Draw menu buttons
         for (int i=0; i<POST_GAME_MENU_BUTTON_COUNT; i++) {

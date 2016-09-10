@@ -32,6 +32,7 @@ ALLEGRO_COLOR background_colour;
 ALLEGRO_COLOR button_background_colour;
 ALLEGRO_COLOR button_hover_colour;
 ALLEGRO_COLOR button_text_colour;
+ALLEGRO_COLOR label_colour;
 
 ALLEGRO_FONT *cell_font;
 ALLEGRO_FONT *title_font;
@@ -105,10 +106,11 @@ int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
     nearby_mines_colour[6] =   al_map_rgb(200, 200, 200);
     nearby_mines_colour[7] =   al_map_rgb(200, 50, 200);
     flag_colour =              al_map_rgb(255, 0, 100);
-    background_colour =        al_map_rgb(0, 0, 0);
+    background_colour =        al_map_rgb(127, 127, 127);
     button_background_colour = al_map_rgb(200, 200, 200);
     button_hover_colour =      al_map_rgb(170, 170, 170);
     button_text_colour =       al_map_rgb(0, 0, 0);
+    label_colour =             al_map_rgb(200, 200, 200);
 
     return 1;
 }
@@ -211,6 +213,25 @@ void draw_button(struct Button *button, int hovered) {
 }
 
 /*
+ * Draw the provided label
+ */
+void draw_label(struct Label *label) {
+    // Load font and get text dimensions
+    ALLEGRO_FONT *font = al_load_ttf_font(FONT_NAME, label->font_size, 0);
+    int bbx, bby, width, height;
+    al_get_text_dimensions(font, label->text, &bbx, &bby, &width, &height);
+
+    int x = label->x - 0.5 * width;
+    int y = label->y - 0.5 * height;
+
+    printf("bbx, bby, width, height: %d, %d, %d, %d\n", bbx, bby ,width, height);
+    printf("Lbel coords are: %d, %d\n", label->x, label->y);
+    printf("Calculated coords are: %d, %d\n", x, y);
+
+    al_draw_text(font, label_colour, x, y, 0, label->text);
+}
+
+/*
  * Work out if a button in the array of buttons pointers is at the specified
  * coordinates. Return a pointer to the clicked button, or NULL if no button was
  * found
@@ -263,7 +284,7 @@ void shade_screen(int x1, int y1, int x2, int y2) {
     int r = 50;
     int g = 50;
     int b = 50;
-    int a = 127;
+    int a = 150;
     ALLEGRO_COLOR c = al_map_rgba(r * a / 255, g * a / 255, b * a / 255, a);
     al_draw_filled_rectangle(x1, y1,x2, y2, c);
 }

@@ -149,8 +149,8 @@ void draw_cell(struct Game *game, int x, int y, int hovered) {
             text = value + '0';
     }
 
-    int sx = game->x_padding + game->cell_size * x;
-    int sy = game->y_padding + game->cell_size * y;
+    float sx = game->x_padding + game->cell_size * x;
+    float sy = game->y_padding + game->cell_size * y;
 
     // Draw cell background colour
     al_draw_filled_rectangle(sx, sy, sx + game->cell_size, sy + game->cell_size,

@@ -143,8 +143,8 @@ int init_game(struct Game *game, int width, int height, int mine_count,
     }
 
     // Calculate cell width in px and grid offset
-    int x = display_width / game->width;
-    int y = display_height / game->height;
+    float x = (float) display_width / game->width;
+    float y = (float) display_height / game->height;
     game->cell_size = (x < y ? x : y);
 
     game->x_padding = (display_width - game->cell_size * game->width) / 2;

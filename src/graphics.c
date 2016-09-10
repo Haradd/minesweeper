@@ -138,7 +138,7 @@ void draw_cell(struct Game *game, int x, int y, int hovered) {
             break;
 
         case CELL_TYPE_FLAG:
-            cell_colour = no_mines_colour;
+            cell_colour = unknown_colour;
             text_colour = flag_colour;
             text = 'F';
             break;
@@ -227,10 +227,6 @@ void draw_label(struct Label *label) {
 
     int x = label->x - 0.5 * width;
     int y = label->y - 0.5 * height;
-
-    printf("bbx, bby, width, height: %d, %d, %d, %d\n", bbx, bby ,width, height);
-    printf("Lbel coords are: %d, %d\n", label->x, label->y);
-    printf("Calculated coords are: %d, %d\n", x, y);
 
     al_draw_text(font, label_colour, x, y, 0, label->text);
 }

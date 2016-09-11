@@ -261,6 +261,11 @@ void handle_click(struct App *app, int mouse_x, int mouse_y, int mouse_button) {
                 params.game_settings.height = 16;
                 params.game_settings.mine_count = 30;
             }
+            else if (button == &(app->large_game_button)) {
+                params.game_settings.width = 30;
+                params.game_settings.height = 16;
+                params.game_settings.mine_count = 99;
+            }
             change_app_state(app, IN_GAME, params);
         }
     }

@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <time.h>
+#include <libgen.h>
 
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_font.h>
@@ -359,11 +360,13 @@ int main(int argc, char **args) {
     srand(time(NULL));
 
     // Initialise allegro related things
+    char asset_dir[200];
+    sprintf(asset_dir, "%s/%s", dirname(args[0]), "assets");
     ALLEGRO_DISPLAY *display;
     ALLEGRO_EVENT_QUEUE *event_queue;
     ALLEGRO_TIMER *timer;
     if (!init_allegro(DISPLAY_WIDTH, DISPLAY_HEIGHT, &display, &event_queue,
-                      &timer)) {
+                      &timer, asset_dir)) {
         exit_app(EXIT_FAILURE);
     }
 

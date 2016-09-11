@@ -11,8 +11,7 @@
 
 #define GRAPHICS_FPS 30
 
-// TODO: Fix this
-#define FONT_NAME "/home/joe/Coding/minesweeper/assets/DejaVuSans.ttf"
+#define FONT_NAME "DejaVuSans.ttf"
 #define TITLE_FONT_SIZE 20
 #define BUTTON_FONT_SIZE 30
 
@@ -38,12 +37,19 @@ ALLEGRO_FONT *cell_font;
 ALLEGRO_FONT *title_font;
 ALLEGRO_FONT *button_font;
 
+// Paths to game assets
+char font_path[200];
+
 /*
  * Initialise allegro and any allegro addons, and create a display and event
  * queue. Return 1 if successful, 0 otherwise
  */
 int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
-                 ALLEGRO_EVENT_QUEUE **event_queue, ALLEGRO_TIMER **timer) {
+                 ALLEGRO_EVENT_QUEUE **event_queue, ALLEGRO_TIMER **timer,
+                 char *asset_dir) {
+
+    // Set paths to game assets
+    sprintf(font_path, "%s/%s", asset_dir, FONT_NAME);
 
     if (!al_init()) {
         fprintf(stderr, "Failed to initialise allegro\n");
@@ -59,8 +65,8 @@ int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
         fprintf(stderr, "Failed to initialise TTF font addon\n");
         return 0;
     }
-    title_font = al_load_ttf_font(FONT_NAME, TITLE_FONT_SIZE, 0);
-    button_font = al_load_ttf_font(FONT_NAME, BUTTON_FONT_SIZE, 0);
+    title_font = al_load_ttf_font(font_path, TITLE_FONT_SIZE, 0);
+    button_font = al_load_ttf_font(font_path, BUTTON_FONT_SIZE, 0);
 
     if (!al_install_mouse()) {
         fprintf(stderr, "Failed to install mouse\n");
@@ -175,7 +181,7 @@ void draw_cell(struct Game *game, int x, int y, int hovered) {
  */
 void draw_game(struct Game *game) {
 
-    cell_font = al_load_ttf_font(FONT_NAME, game->cell_size, 0);
+    cell_font = al_load_ttf_font(font_path, game->cell_size, 0);
 
     // Draw the cells
     for (int i=0; i<game->width; i++) {
@@ -219,7 +225,7 @@ void draw_button(struct Button *button, int hovered) {
  */
 void set_label_font(struct Label *label, int font_size) {
     label->font_size = font_size;
-    label->font = al_load_ttf_font(FONT_NAME, font_size, 0);
+    label->font = al_load_ttf_font(font_path, font_size, 0);
 }
 
 /*

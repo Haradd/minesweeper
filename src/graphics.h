@@ -27,7 +27,8 @@ struct Label {
 };
 
 int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
-                 ALLEGRO_EVENT_QUEUE **event_queue, ALLEGRO_TIMER **timer);
+                 ALLEGRO_EVENT_QUEUE **event_queue, ALLEGRO_TIMER **timer,
+                 char *asset_dir);
 void draw_cell(struct Game *game, int x, int y, int hovered);
 void draw_game(struct Game *game);
 void draw_button(struct Button *button, int hovered);

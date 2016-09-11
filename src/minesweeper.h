@@ -25,6 +25,7 @@ struct Game {
 
 int init_game(struct Game *game, int width, int height, int mine_count,
               int display_width, int display_height, int padding);
+void reveal_neighobouring_cells(struct Game *game, int x, int y);
 void reveal_cell(struct Game *game, int x, int y);
 int won_game(struct Game *game);
 int lost_game(struct Game *game);

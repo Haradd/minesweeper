@@ -157,6 +157,31 @@ int init_game(struct Game *game, int width, int height, int mine_count,
 }
 
 /*
+ * Reveal all cells adjacent to the specified cell
+ */
+void reveal_neighobouring_cells(struct Game *game, int x, int y) {
+    for (int dx=-1; dx<=1; dx++) {
+        for (int dy=-1; dy<=1; dy++) {
+
+            int newX = x + dx;
+            int newY = y + dy;
+
+            // Skip if (x + dx, y + dy) is not in the grid
+            if (!valid_coords(game, newX, newY)) {
+                continue;
+            }
+
+            // Skip this cell if it has already been revealed
+            if (get_cell(game, newX, newY) != CELL_TYPE_UNKNOWN) {
+                continue;
+            }
+
+            reveal_cell(game, newX, newY);
+        }
+    }
+}
+
+/*
  * Reveal a cell. If the cell contains a mine, set the mine_exploded flag and
  * return. If there are any adjacent mines, set the cell to the number and
  * return. If there are no adjacent mines, recursively reveal all adjacent cells
@@ -184,25 +209,7 @@ void reveal_cell(struct Game *game, int x, int y) {
         set_cell(game, x, y, cell_value);
 
         if (n == 0) {
-            for (int dx=-1; dx<=1; dx++) {
-                for (int dy=-1; dy<=1; dy++) {
-
-                    int newX = x + dx;
-                    int newY = y + dy;
-
-                    // Skip if (x + dx, y + dy) is not in the grid
-                    if (!valid_coords(game, newX, newY)) {
-                        continue;
-                    }
-
-                    // Skip this cell if it has already been revealed
-                    if (get_cell(game, newX, newY) != CELL_TYPE_UNKNOWN) {
-                        continue;
-                    }
-
-                    reveal_cell(game, newX, newY);
-                }
-            }
+            reveal_neighobouring_cells(game, x, y);
         }
     }
 }

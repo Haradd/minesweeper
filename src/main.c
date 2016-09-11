@@ -218,9 +218,19 @@ void handle_click(struct App *app, int mouse_x, int mouse_y, int mouse_button) {
         int x, y;
         if (get_clicked_cell(&(app->game), mouse_x, mouse_y, &x, &y)) {
 
-            // Left click - reveal the cell
+            // Left click
             if (mouse_button == 1) {
-                reveal_cell(&(app->game), x, y);
+                int cell = get_cell(&(app->game), x, y);
+
+                // If this cell is unknown then reveal it
+                if (cell == CELL_TYPE_UNKNOWN){
+                    reveal_cell(&(app->game), x, y);
+                }
+                // If the cell is not revealed and not a flag, then 'click' all
+                // neighbouring cells
+                else if (cell != CELL_TYPE_FLAG) {
+                    reveal_neighobouring_cells(&(app->game), x, y);
+                }
             }
             // Right click - toggle flag
             else if (mouse_button == 2) {

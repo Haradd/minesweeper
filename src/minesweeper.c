@@ -1,3 +1,4 @@
+#include <time.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -6,9 +7,6 @@
 
 #define MAX_WIDTH  99
 #define MAX_HEIGHT 99
-
-// The minimum padding between the game grid and the edges of the display
-#define GRID_PADDING 30
 
 /*
  * Check that the provided coordinates are in range. Return 1 if they are,
@@ -103,7 +101,7 @@ int adjacent_mines(struct Game *game, int x, int y) {
  * otherwise
  */
 int init_game(struct Game *game, int width, int height, int mine_count,
-              int display_width, int display_height) {
+              int display_width, int display_height, int padding) {
 
     // Initialise the grid
     if (width < 1 || width > MAX_WIDTH || height < 1 || height > MAX_HEIGHT) {
@@ -146,12 +144,14 @@ int init_game(struct Game *game, int width, int height, int mine_count,
     }
 
     // Calculate cell width in px and grid offset
-    float x = (float) (display_width - 2 * GRID_PADDING) / game->width;
-    float y = (float) (display_height - 2 * GRID_PADDING) / game->height;
+    float x = (float) (display_width - 2 * padding) / game->width;
+    float y = (float) (display_height - 2 * padding) / game->height;
     game->cell_size = (x < y ? x : y);
 
     game->x_padding = (display_width - game->cell_size * game->width) / 2;
     game->y_padding = (display_height - game->cell_size * game->height) / 2;
+
+    game->timestamp = time(NULL);
 
     return 1;
 }

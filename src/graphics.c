@@ -177,8 +177,6 @@ void draw_game(struct Game *game) {
 
     cell_font = al_load_ttf_font(FONT_NAME, game->cell_size, 0);
 
-    draw_background();
-
     // Draw the cells
     for (int i=0; i<game->width; i++) {
         for (int j=0; j<game->height; j++) {
@@ -217,18 +215,36 @@ void draw_button(struct Button *button, int hovered) {
 }
 
 /*
+ * Load a font for the specified font size and store it in the provided label
+ */
+void set_label_font(struct Label *label, int font_size) {
+    label->font_size = font_size;
+    label->font = al_load_ttf_font(FONT_NAME, font_size, 0);
+}
+
+/*
  * Draw the provided label
  */
 void draw_label(struct Label *label) {
-    // Load font and get text dimensions
-    ALLEGRO_FONT *font = al_load_ttf_font(FONT_NAME, label->font_size, 0);
+    // Get text dimensions to work out coordinates to draw the label at
     int bbx, bby, width, height;
-    al_get_text_dimensions(font, label->text, &bbx, &bby, &width, &height);
+    al_get_text_dimensions(label->font, label->text, &bbx, &bby, &width, &height);
 
     int x = label->x - 0.5 * width;
     int y = label->y - 0.5 * height;
 
-    al_draw_text(font, label_colour, x, y, 0, label->text);
+    al_draw_text(label->font, label_colour, x, y, 0, label->text);
+}
+
+/*
+ * Draw the background colour over the provided label
+ */
+void clear_label(struct Label *label) {
+    int bbx, bby, width, height;
+    al_get_text_dimensions(label->font, label->text, &bbx, &bby, &width, &height);
+    al_draw_filled_rectangle(label->x - 0.5 * width, label->y - 0.5 * height,
+                             label->x + 0.5 * width, label->y + 0.5 * height,
+                             background_colour);
 }
 
 /*

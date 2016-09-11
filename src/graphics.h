@@ -4,6 +4,9 @@
 #define MAX_BUTTON_LENGTH 20
 #define MAX_LABEL_LENGTH 20
 
+// The minimum padding between the game grid and the edges of the display
+#define GRID_PADDING 30
+
 struct Button {
     char label[MAX_BUTTON_LENGTH];
 
@@ -14,11 +17,13 @@ struct Button {
 
 struct Label {
     char text[MAX_LABEL_LENGTH];
-    int font_size;
 
     // The coordinates of the CENTER of the text
     int x;
     int y;
+
+    int font_size;
+    ALLEGRO_FONT *font;
 };
 
 int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
@@ -26,7 +31,9 @@ int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
 void draw_cell(struct Game *game, int x, int y, int hovered);
 void draw_game(struct Game *game);
 void draw_button(struct Button *button, int hovered);
+void set_label_font(struct Label *label, int font_size);
 void draw_label(struct Label *label);
+void clear_label(struct Label *label);
 struct Button *get_clicked_button(struct Button **buttons, int count, int mouse_x,
                                   int mouse_y);
 int get_clicked_cell(struct Game *game, int mouse_x, int mouse_y, int *x_ptr,

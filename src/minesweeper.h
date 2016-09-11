@@ -18,10 +18,13 @@ struct Game {
     float cell_size;  // The width/height of each cell in px
     float x_padding;  // The x offset of the grid in px
     float y_padding;  // The y offset of the grid in px
+
+    // Timestamp of when the game started
+    time_t timestamp;
 };
 
 int init_game(struct Game *game, int width, int height, int mine_count,
-              int display_width, int display_height);
+              int display_width, int display_height, int padding);
 void reveal_cell(struct Game *game, int x, int y);
 int won_game(struct Game *game);
 int lost_game(struct Game *game);

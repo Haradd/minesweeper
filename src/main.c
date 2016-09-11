@@ -2,6 +2,7 @@
 #include <time.h>
 
 #include <allegro5/allegro.h>
+#include <allegro5/allegro_font.h>
 
 #include "minesweeper.h"
 #include "graphics.h"
@@ -42,6 +43,9 @@ struct App {
     // The button/cell that is current being hovered over
     struct Button *hovered_button;
     int hovered_cell;
+
+    // Label to show elapsed time
+    struct Label timer_label;
 
     int redraw_required;
 };
@@ -93,10 +97,11 @@ void init_app(struct App *app) {
     app->post_game_menu_buttons[2] = &(app->quit_button);
 
     // Set up labels. Note that the text for game_result_label is set when the
-    // game ends
+    // game ends, and timer_label is set when game starts
     strcpy(app->title_label.text, "Minesweeper");
-    app->title_label.font_size = 60;
-    app->game_result_label.font_size = 40;
+    set_label_font(&(app->title_label), 60);
+    set_label_font(&(app->game_result_label), 40);
+    set_label_font(&(app->timer_label), 30);
 
     // Set the coordinates of the main menu items...
     int spacing = DISPLAY_HEIGHT / (MAIN_MENU_BUTTON_COUNT + 2);
@@ -117,6 +122,10 @@ void init_app(struct App *app) {
         app->post_game_menu_buttons[i]->x = DISPLAY_WIDTH / 2;
         app->post_game_menu_buttons[i]->y = (i + 2) * spacing;
     }
+
+    // Set the coordinates of the timer label
+    app->timer_label.x = DISPLAY_WIDTH - GRID_PADDING - app->timer_label.font_size;
+    app->timer_label.y = app->timer_label.font_size;
 
     app->hovered_button = NULL;
     app->hovered_cell = -1;
@@ -147,8 +156,9 @@ void change_app_state(struct App *app, enum AppState new_state,
         if (init_game(&(app->game), params.game_settings.width,
                       params.game_settings.height,
                       params.game_settings.mine_count, DISPLAY_WIDTH,
-                      DISPLAY_HEIGHT)) {
+                      DISPLAY_HEIGHT, GRID_PADDING)) {
 
+            draw_background();
             draw_game(&(app->game));
             app->redraw_required = 1;
         }
@@ -177,6 +187,25 @@ void change_app_state(struct App *app, enum AppState new_state,
     }
 
     app->state = new_state;
+}
+
+/*
+ * Update the time elapsed label for the game
+ */
+void update_game_timer(struct App *app) {
+    if (app->state == IN_GAME) {
+        static int elapsed_seconds = -1;
+        int new_elapsed_seconds = time(NULL)- app->game.timestamp;
+
+        if (new_elapsed_seconds != elapsed_seconds) {
+            elapsed_seconds = new_elapsed_seconds;
+            sprintf(app->timer_label.text, "%ds", elapsed_seconds);
+
+            clear_label(&(app->timer_label));
+            draw_label(&(app->timer_label));
+            app->redraw_required = 1;
+        }
+    }
 }
 
 /*
@@ -372,8 +401,11 @@ int main(int argc, char **args) {
                 handle_mouse_move(&app, event.mouse.x, event.mouse.y);
             }
 
-            // Timer events signify when the display can be redrawn
+            // Timer events signify when the display can be redrawn and when
+            // time elapsed can be updated
             else if (event.type == ALLEGRO_EVENT_TIMER) {
+                update_game_timer(&app);
+
                 if (app.redraw_required) {
                     al_flip_display();
                     app.redraw_required = 0;

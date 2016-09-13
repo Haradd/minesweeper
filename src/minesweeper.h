@@ -15,6 +15,10 @@ struct Game {
     int cells_revealed;
     int mine_exploded;
 
+    // Number of flags remaning. Note that this can be negative if the user has
+    // placed more flags than there are mines
+    int flags_remaining;
+
     float cell_size;  // The width/height of each cell in px
     float x_padding;  // The x offset of the grid in px
     float y_padding;  // The y offset of the grid in px

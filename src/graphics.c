@@ -246,8 +246,9 @@ void draw_label(struct Label *label) {
  * Draw the background colour over the provided label
  */
 void clear_label(struct Label *label) {
-    int bbx, bby, width, height;
-    al_get_text_dimensions(label->font, label->text, &bbx, &bby, &width, &height);
+    int width = al_get_text_width(label->font, label->text);
+    int height = al_get_font_line_height(label->font);
+
     al_draw_filled_rectangle(label->x - 0.5 * width, label->y - 0.5 * height,
                              label->x + 0.5 * width, label->y + 0.5 * height,
                              background_colour);

@@ -30,6 +30,7 @@ struct App {
     struct Button medium_game_button;
     struct Button large_game_button;
     struct Label title_label;
+    struct Label flags_label;
 
     // Post-game menu buttons and labels
     struct Button replay_game_button;
@@ -76,6 +77,34 @@ void exit_app(int status) {
 }
 
 /*
+ * Update the label that shows the number of flags remaning
+ */
+void update_flags_label(struct App *app) {
+    clear_label(&(app->flags_label));
+    sprintf(app->flags_label.text, "%d", app->game.flags_remaining);
+    draw_label(&(app->flags_label));
+    app->redraw_required = 1;
+}
+
+/*
+ * Update the time elapsed label for the game
+ */
+void update_game_timer(struct App *app) {
+    if (app->state == IN_GAME) {
+        static int elapsed_seconds = -1;
+        int new_elapsed_seconds = time(NULL)- app->game.timestamp;
+
+        if (new_elapsed_seconds != elapsed_seconds) {
+            elapsed_seconds = new_elapsed_seconds;
+            clear_label(&(app->timer_label));
+            sprintf(app->timer_label.text, "%ds",10 - elapsed_seconds);
+            draw_label(&(app->timer_label));
+            app->redraw_required = 1;
+        }
+    }
+}
+
+/*
  * Initialise an App struct by creating the menu buttons and initialising
  * member variables
  */
@@ -98,11 +127,12 @@ void init_app(struct App *app) {
     app->post_game_menu_buttons[2] = &(app->quit_button);
 
     // Set up labels. Note that the text for game_result_label is set when the
-    // game ends, and timer_label is set when game starts
+    // game ends, and timer_label and flags_label is set when game starts
     strcpy(app->title_label.text, "Minesweeper");
     set_label_font(&(app->title_label), 60);
     set_label_font(&(app->game_result_label), 40);
     set_label_font(&(app->timer_label), 30);
+    set_label_font(&(app->flags_label), 30);
 
     // Set the coordinates of the main menu items...
     int spacing = DISPLAY_HEIGHT / (MAIN_MENU_BUTTON_COUNT + 2);
@@ -124,9 +154,12 @@ void init_app(struct App *app) {
         app->post_game_menu_buttons[i]->y = (i + 2) * spacing;
     }
 
-    // Set the coordinates of the timer label
+    // Set the coordinates of the timer and flags labels
     app->timer_label.x = DISPLAY_WIDTH - GRID_PADDING - app->timer_label.font_size;
     app->timer_label.y = app->timer_label.font_size;
+
+    app->flags_label.x = GRID_PADDING + app->flags_label.font_size;
+    app->flags_label.y = app->flags_label.font_size;
 
     app->hovered_button = NULL;
     app->hovered_cell = -1;
@@ -161,6 +194,10 @@ void change_app_state(struct App *app, enum AppState new_state,
 
             draw_background();
             draw_game(&(app->game));
+
+            strcpy(app->flags_label.text, "0");
+            update_flags_label(app);
+
             app->redraw_required = 1;
         }
         else {
@@ -191,25 +228,6 @@ void change_app_state(struct App *app, enum AppState new_state,
 }
 
 /*
- * Update the time elapsed label for the game
- */
-void update_game_timer(struct App *app) {
-    if (app->state == IN_GAME) {
-        static int elapsed_seconds = -1;
-        int new_elapsed_seconds = time(NULL)- app->game.timestamp;
-
-        if (new_elapsed_seconds != elapsed_seconds) {
-            elapsed_seconds = new_elapsed_seconds;
-            sprintf(app->timer_label.text, "%ds", elapsed_seconds);
-
-            clear_label(&(app->timer_label));
-            draw_label(&(app->timer_label));
-            app->redraw_required = 1;
-        }
-    }
-}
-
-/*
  * Callback function for an allegro mouse button up event. Reveal/toggle flag
  * a cell if in game, or respond to button presses in menus
  */
@@ -235,6 +253,7 @@ void handle_click(struct App *app, int mouse_x, int mouse_y, int mouse_button) {
             // Right click - toggle flag
             else if (mouse_button == 2) {
                 toggle_flag(&(app->game), x, y);
+                update_flags_label(app);
             }
 
             draw_game(&(app->game));

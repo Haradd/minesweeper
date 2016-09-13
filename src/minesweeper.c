@@ -123,6 +123,7 @@ int init_game(struct Game *game, int width, int height, int mine_count,
     game->mines = malloc(sizeof(int) * mine_count);
     game->cells_revealed = 0;
     game->mine_exploded = 0;
+    game->flags_remaining = mine_count;
 
     // Position the mines
     int mines_placed = 0;
@@ -223,10 +224,12 @@ void toggle_flag(struct Game *game, int x, int y) {
 
     if (cell_value == CELL_TYPE_UNKNOWN) {
         set_cell(game, x, y, CELL_TYPE_FLAG);
+        game->flags_remaining--;
     }
 
     else if (cell_value == CELL_TYPE_FLAG) {
         set_cell(game, x, y, CELL_TYPE_UNKNOWN);
+        game->flags_remaining++;
     }
 }
 

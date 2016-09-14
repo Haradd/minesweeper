@@ -7,6 +7,7 @@
 
 #include "minesweeper.h"
 #include "graphics.h"
+#include "error.h"
 
 #define DISPLAY_WIDTH 900
 #define DISPLAY_HEIGHT 700
@@ -72,15 +73,6 @@ union StateChangeParams {
     // This is used when changing to POST_GAME
     int won_game;
 };
-
-/*
- * Exit the application with the specified status
- *
- * TODO: Free up memory and destory allegro things before exiting
- */
-void exit_app(int status) {
-    exit(status);
-}
 
 /*
  * Update the label that shows the number of flags remaning
@@ -222,7 +214,6 @@ void change_app_state(struct App *app, enum AppState new_state,
             app->redraw_required = 1;
         }
         else {
-            fprintf(stderr, "Error initialising game\n");
             exit_app(EXIT_FAILURE);
         }
     }

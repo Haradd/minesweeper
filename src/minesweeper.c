@@ -4,6 +4,7 @@
 #include <string.h>
 
 #include "minesweeper.h"
+#include "error.h"
 
 #define MAX_WIDTH  99
 #define MAX_HEIGHT 99
@@ -105,7 +106,7 @@ int init_game(struct Game *game, int width, int height, int mine_count,
 
     // Initialise the grid
     if (width < 1 || width > MAX_WIDTH || height < 1 || height > MAX_HEIGHT) {
-        printf("Invalid grid dimensions\n");
+        print_error("Invalid grid dimensions");
         return 0;
     }
 

@@ -9,6 +9,7 @@
 
 #include "minesweeper.h"
 #include "graphics.h"
+#include "error.h"
 
 #define GRAPHICS_FPS 30
 
@@ -67,43 +68,43 @@ int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
     bitmap_container.count = 0;
 
     if (!al_init()) {
-        fprintf(stderr, "Failed to initialise allegro\n");
+        print_error("Failed to initialise allegro");
         return 0;
     }
     if (!al_init_primitives_addon()) {
-        fprintf(stderr, "Failed to initialise primitives addon\n");
+        print_error("Failed to initialise primitives addon");
         return 0;
     }
 
     if (!al_init_image_addon()) {
-        fprintf(stderr, "Failed to initialise image addon\n");
+        print_error("Failed to initialise image addon");
         return 0;
     }
 
     al_init_font_addon();
     if (!al_init_ttf_addon()) {
-        fprintf(stderr, "Failed to initialise TTF font addon\n");
+        print_error("Failed to initialise TTF font addon");
         return 0;
     }
     title_font = al_load_ttf_font(font_path, TITLE_FONT_SIZE, 0);
     button_font = al_load_ttf_font(font_path, BUTTON_FONT_SIZE, 0);
 
     if (!al_install_mouse()) {
-        fprintf(stderr, "Failed to install mouse\n");
+        print_error("Failed to install mouse");
         return 0;
     }
 
     // Create the display
     *display = al_create_display(width, height);
     if (!(*display)) {
-        fprintf(stderr, "Failed to create display\n");
+        print_error("Failed to create display");
         return 0;
     }
 
     // Create and start the timer
     *timer = al_create_timer(1.0 / GRAPHICS_FPS);
     if (!(*timer)) {
-        fprintf(stderr, "Failed to create timer\n");
+        print_error("Failed to create timer");
         return 0;
     }
     al_start_timer(*timer);
@@ -111,7 +112,7 @@ int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
     // Create and register the event queue
     *event_queue = al_create_event_queue();
     if (!(*event_queue)) {
-        fprintf(stderr, "Failed to create event queue\n");
+        print_error("Failed to create event queue");
         return 0;
     }
     al_register_event_source(*event_queue, al_get_display_event_source(*display));
@@ -155,6 +156,16 @@ ALLEGRO_BITMAP *get_bitmap(char *name) {
     char path[200];
     sprintf(path, "%s/%s", asset_dir, name);
     ALLEGRO_BITMAP *bmp = al_load_bitmap(path);
+
+    if (bmp == NULL) {
+        char message_part[] = "Failed to load ";
+        char *message = malloc(strlen(message_part) + strlen(name) + 1);
+        sprintf(message, "%s%s", message_part, name);
+        print_error(message);
+        free(message);
+
+        exit_app(EXIT_FAILURE);
+    }
 
     // Store the name and bitmap
     strcpy(bitmap_container.names[bitmap_container.count], name);

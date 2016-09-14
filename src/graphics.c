@@ -16,8 +16,6 @@
 #define TITLE_FONT_SIZE 20
 #define BUTTON_FONT_SIZE 30
 
-// The vertical space between each button
-#define BUTTON_MARGIN 30
 // The vertical space between the text and the sides of the button
 #define BUTTON_PADDING 30
 
@@ -37,7 +35,6 @@ ALLEGRO_COLOR mine_colour;
 ALLEGRO_COLOR unknown_colour;
 ALLEGRO_COLOR no_mines_colour;
 ALLEGRO_COLOR nearby_mines_colour[8];
-ALLEGRO_COLOR flag_colour;
 ALLEGRO_COLOR background_colour;
 ALLEGRO_COLOR button_background_colour;
 ALLEGRO_COLOR button_hover_colour;
@@ -134,7 +131,6 @@ int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
     nearby_mines_colour[5] =   al_map_rgb(0, 200, 200);
     nearby_mines_colour[6] =   al_map_rgb(200, 200, 200);
     nearby_mines_colour[7] =   al_map_rgb(200, 50, 200);
-    flag_colour =              al_map_rgb(255, 0, 100);
     background_colour =        al_map_rgb(127, 127, 127);
     button_background_colour = al_map_rgb(200, 200, 200);
     button_hover_colour =      al_map_rgb(170, 170, 170);
@@ -177,6 +173,10 @@ void draw_cell(struct Game *game, int x, int y, int hovered) {
     char text = 0;
     ALLEGRO_COLOR text_colour;
     ALLEGRO_COLOR cell_colour;
+
+    char image_name[60];
+    image_name[0] = '\0';
+
     switch (value) {
         case CELL_TYPE_MINE:
             cell_colour = mine_colour;
@@ -192,8 +192,7 @@ void draw_cell(struct Game *game, int x, int y, int hovered) {
 
         case CELL_TYPE_FLAG:
             cell_colour = unknown_colour;
-            text_colour = flag_colour;
-            text = 'F';
+            strcpy(image_name, "flag.png");
             break;
 
         default:
@@ -216,10 +215,16 @@ void draw_cell(struct Game *game, int x, int y, int hovered) {
                       sy + game->cell_size - line_width / 2,
                       line_colour, line_width);
 
+    // Draw text if text has been specified
     if (text != 0) {
         char string[] = {text};
         al_draw_text(cell_font, text_colour, sx + 0.5 * game->cell_size, sy,
                      ALLEGRO_ALIGN_CENTRE, string);
+    }
+
+    // Draw an image if image_name has been set
+    if (strlen(image_name) > 0) {
+        draw_image(image_name, sx, sy, game->cell_size, game->cell_size);
     }
 }
 

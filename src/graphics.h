@@ -15,12 +15,22 @@ struct Button {
     int y;
 };
 
+// An enum to contain the possible options for label alignment
+enum LabelAlignment {
+    ALIGN_LEFT,
+    ALIGN_CENTER,
+    ALIGN_RIGHT
+};
+
 struct Label {
     char text[MAX_LABEL_LENGTH];
 
-    // The coordinates of the CENTER of the text
+    enum LabelAlignment alignment;
+
+    // The x-coordinate to draw the label at. This is the point at the left,
+    // center of right of the label depending on the value of alignment
     int x;
-    int y;
+    int y;  // The y-coordinate of the center of the label
 
     int font_size;
     ALLEGRO_FONT *font;

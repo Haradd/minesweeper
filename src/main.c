@@ -14,6 +14,12 @@
 #define MAIN_MENU_BUTTON_COUNT 3
 #define POST_GAME_MENU_BUTTON_COUNT 3
 
+// The width/height for icons (e.g. flags remaining and timer icos)
+#define ICON_SIZE 40
+
+// The horizontal padding for the flags remaining/timer labels
+#define FLAG_TIMER_PADDING 10
+
 enum AppState {
     MAIN_MENU,
     IN_GAME,
@@ -134,6 +140,11 @@ void init_app(struct App *app) {
     set_label_font(&(app->timer_label), 30);
     set_label_font(&(app->flags_label), 30);
 
+    app->title_label.alignment = ALIGN_CENTER;
+    app->game_result_label.alignment = ALIGN_CENTER;
+    app->timer_label.alignment = ALIGN_RIGHT;
+    app->flags_label.alignment = ALIGN_LEFT;
+
     // Set the coordinates of the main menu items...
     int spacing = DISPLAY_HEIGHT / (MAIN_MENU_BUTTON_COUNT + 2);
     app->title_label.x = DISPLAY_WIDTH / 2;
@@ -155,10 +166,10 @@ void init_app(struct App *app) {
     }
 
     // Set the coordinates of the timer and flags labels
-    app->timer_label.x = DISPLAY_WIDTH - GRID_PADDING - app->timer_label.font_size;
+    app->timer_label.x = DISPLAY_WIDTH - FLAG_TIMER_PADDING - ICON_SIZE;
     app->timer_label.y = app->timer_label.font_size;
 
-    app->flags_label.x = GRID_PADDING + app->flags_label.font_size;
+    app->flags_label.x = FLAG_TIMER_PADDING + ICON_SIZE;
     app->flags_label.y = app->flags_label.font_size;
 
     app->hovered_button = NULL;
@@ -195,8 +206,18 @@ void change_app_state(struct App *app, enum AppState new_state,
             draw_background();
             draw_game(&(app->game));
 
+            // Draw flag icon next to flags remaining label
+            draw_image("flag.png", FLAG_TIMER_PADDING,
+                       app->flags_label.y - 0.5 * ICON_SIZE, ICON_SIZE,
+                       ICON_SIZE);
             strcpy(app->flags_label.text, "0");
             update_flags_label(app);
+
+            // Draw clock icon next to timer label
+            draw_image("clock.png",
+                       DISPLAY_WIDTH - FLAG_TIMER_PADDING - ICON_SIZE,
+                       app->timer_label.y - 0.5 * ICON_SIZE, ICON_SIZE,
+                       ICON_SIZE);
 
             app->redraw_required = 1;
         }

@@ -281,29 +281,50 @@ void set_label_font(struct Label *label, int font_size) {
 }
 
 /*
+ * Calculate the coordinates of the rectangle for a given label (see
+ * get_button_rect)
+ */
+void get_label_rect(struct Label *label, int *x1, int *y1, int *x2, int *y2) {
+    int width = al_get_text_width(label->font, label->text);
+    int height = al_get_font_line_height(label->font);
+
+    // The y-coordinate is always at the center of the label, so subtract half
+    // the height
+    *y1 = label->y - 0.5 * height;
+
+    // Calculate x1 based on the alignment
+    switch (label->alignment) {
+        case ALIGN_LEFT:
+            *x1 = label->x;
+            break;
+        case ALIGN_CENTER:
+            *x1 = label->x - 0.5 * width;
+            break;
+        case ALIGN_RIGHT:
+            *x1 = label->x - width;
+            break;
+    }
+
+    *x2 = *x1 + width;
+    *y2 = *y1 + height;
+}
+
+/*
  * Draw the provided label
  */
 void draw_label(struct Label *label) {
-    // Get text dimensions to work out coordinates to draw the label at
-    int bbx, bby, width, height;
-    al_get_text_dimensions(label->font, label->text, &bbx, &bby, &width, &height);
-
-    int x = label->x - 0.5 * width;
-    int y = label->y - 0.5 * height;
-
-    al_draw_text(label->font, label_colour, x, y, 0, label->text);
+    int x1, y1, x2, y2;
+    get_label_rect(label, &x1, &y1, &x2, &y2);
+    al_draw_text(label->font, label_colour, x1, y1, 0, label->text);
 }
 
 /*
  * Draw the background colour over the provided label
  */
 void clear_label(struct Label *label) {
-    int width = al_get_text_width(label->font, label->text);
-    int height = al_get_font_line_height(label->font);
-
-    al_draw_filled_rectangle(label->x - 0.5 * width, label->y - 0.5 * height,
-                             label->x + 0.5 * width, label->y + 0.5 * height,
-                             background_colour);
+    int x1, y1, x2, y2;
+    get_label_rect(label, &x1, &y1, &x2, &y2);
+    al_draw_filled_rectangle(x1, y1, x2, y2, background_colour);
 }
 
 /*

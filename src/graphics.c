@@ -20,6 +20,10 @@
 // The vertical space between the text and the sides of the button
 #define BUTTON_PADDING 30
 
+// The radius for the rounded rectangle drawn for a cell as percentage
+// (100% = Circle)
+#define GRID_CELL_RADIUS 0.25
+
 // The number of images used in the application
 #define IMAGE_COUNT 2
 
@@ -176,6 +180,22 @@ ALLEGRO_BITMAP *get_bitmap(char *name) {
 }
 
 /*
+ * Calculate the coordinates of the corners of the rectangle for a cell.
+ * Note that this is the coordinates of the visible part, i.e. not including
+ * padding
+ */
+void get_cell_rect(struct Game *game, int x, int y, int *x1, int *y1, int *x2,
+                   int *y2) {
+
+    *x1 = game->x_padding + x * (game->cell_size + 2 * game->cell_padding)
+          + game->cell_padding;
+    *y1 = game->y_padding + y * (game->cell_size + 2 * game->cell_padding)
+          + game->cell_padding;
+    *x2 = *x1 + game->cell_size;
+    *y2 = *y1 + game->cell_size;
+}
+
+/*
  * Draw an individual cell to the screen
  */
 void draw_cell(struct Game *game, int x, int y, int hovered) {
@@ -212,30 +232,36 @@ void draw_cell(struct Game *game, int x, int y, int hovered) {
             text = value + '0';
     }
 
-    float sx = game->x_padding + game->cell_size * x;
-    float sy = game->y_padding + game->cell_size * y;
+    // Make the cell background colour a bit darker if the cell is being hovered
+    if (hovered) {
+        unsigned char r, g, b;
+        al_unmap_rgb(cell_colour, &r, &g, &b);
+        int delta = -20;
+        r += delta;
+        g += delta;
+        b += delta;
+
+        cell_colour = al_map_rgb(r, g, b);
+    }
+
+    int dx1, dy1, dx2, dy2;
+    get_cell_rect(game, x, y, &dx1, &dy1, &dx2, &dy2);
 
     // Draw cell background colour
-    al_draw_filled_rectangle(sx, sy, sx + game->cell_size, sy + game->cell_size,
-                             cell_colour);
-
-    // Draw cell border
-    float line_width = hovered ? 2 : 1;
-    al_draw_rectangle(sx + line_width / 2, sy + line_width / 2,
-                      sx + game->cell_size - line_width / 2,
-                      sy + game->cell_size - line_width / 2,
-                      line_colour, line_width);
+    float radius = 0.5 * game->cell_size * GRID_CELL_RADIUS;
+    al_draw_filled_rounded_rectangle(dx1, dy1, dx2, dy2, radius, radius,
+                                     cell_colour);
 
     // Draw text if text has been specified
     if (text != 0) {
         char string[] = {text};
-        al_draw_text(cell_font, text_colour, sx + 0.5 * game->cell_size, sy,
+        al_draw_text(cell_font, text_colour, 0.5 * (dx1 + dx2), dy1,
                      ALLEGRO_ALIGN_CENTRE, string);
     }
 
     // Draw an image if image_name has been set
     if (strlen(image_name) > 0) {
-        draw_image(image_name, sx, sy, game->cell_size, game->cell_size);
+        draw_image(image_name, dx1, dy1, dx2 - dx1, dy2 - dy1);
     }
 }
 
@@ -371,17 +397,25 @@ int get_clicked_cell(struct Game *game, int mouse_x, int mouse_y, int *x_ptr,
     int y_offset = mouse_y - game->y_padding;
 
     // If the click was within the grid area...
-    if (x_offset >= 0 && x_offset < game->width * game->cell_size &&
-        y_offset >= 0 && y_offset < game->height * game->cell_size) {
+    float total_cell_size = game->cell_size + 2 * game->cell_padding;
+    if (x_offset >= 0 && x_offset < game->width * total_cell_size &&
+        y_offset >= 0 && y_offset < game->height * total_cell_size) {
 
-        *x_ptr = x_offset / game->cell_size;
-        *y_ptr = y_offset / game->cell_size;
+        int x = x_offset / total_cell_size;
+        int y = y_offset / total_cell_size;
 
-        return 1;
+        // Check that the mouse is actually within the cell, not within the
+        // padding around the cell
+        int x1, y1, x2, y2;
+        get_cell_rect(game, x, y, &x1, &y1, &x2, &y2);
+        if (mouse_x >= x1 && mouse_x <= x2 && mouse_y >= y1 && mouse_y <= y2) {
+            *x_ptr = x;
+            *y_ptr = y;
+            return 1;
+        }
     }
-    else {
-        return 0;
-    }
+
+    return 0;
 }
 
 /*

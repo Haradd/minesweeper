@@ -102,7 +102,8 @@ int adjacent_mines(struct Game *game, int x, int y) {
  * otherwise
  */
 int init_game(struct Game *game, int width, int height, int mine_count,
-              int display_width, int display_height, int padding) {
+              int display_width, int display_height, int grid_padding,
+              float cell_padding) {
 
     // Initialise the grid
     if (width < 1 || width > MAX_WIDTH || height < 1 || height > MAX_HEIGHT) {
@@ -145,13 +146,18 @@ int init_game(struct Game *game, int width, int height, int mine_count,
         }
     }
 
-    // Calculate cell width in px and grid offset
-    float x = (float) (display_width - 2 * padding) / game->width;
-    float y = (float) (display_height - 2 * padding) / game->height;
-    game->cell_size = (x < y ? x : y);
+    // Calculate cell width and padding in px
+    float x = (float) (display_width - 2 * grid_padding) / game->width;
+    float y = (float) (display_height - 2 * grid_padding) / game->height;
+    float total_size = (x < y ? x : y);
 
-    game->x_padding = (display_width - game->cell_size * game->width) / 2;
-    game->y_padding = (display_height - game->cell_size * game->height) / 2;
+    // cell_padding is a percentage of total cell size
+    game->cell_padding = total_size * cell_padding;
+    game->cell_size = total_size - 2 * game->cell_padding;
+
+    // Work out grid offsets
+    game->x_padding = (display_width - total_size * game->width) / 2;
+    game->y_padding = (display_height - total_size * game->height) / 2;
 
     game->timestamp = time(NULL);
 

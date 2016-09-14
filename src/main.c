@@ -193,7 +193,7 @@ void change_app_state(struct App *app, enum AppState new_state,
         if (init_game(&(app->game), params.game_settings.width,
                       params.game_settings.height,
                       params.game_settings.mine_count, DISPLAY_WIDTH,
-                      DISPLAY_HEIGHT, GRID_PADDING)) {
+                      DISPLAY_HEIGHT, GRID_PADDING, CELL_PADDING)) {
 
             draw_background();
             draw_game(&(app->game));

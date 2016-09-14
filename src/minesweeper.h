@@ -20,6 +20,11 @@ struct Game {
     int flags_remaining;
 
     float cell_size;  // The width/height of each cell in px
+
+    // The padding between the visible area of cells and the actual border
+    // between cells
+    float cell_padding;
+
     float x_padding;  // The x offset of the grid in px
     float y_padding;  // The y offset of the grid in px
 
@@ -28,7 +33,8 @@ struct Game {
 };
 
 int init_game(struct Game *game, int width, int height, int mine_count,
-              int display_width, int display_height, int padding);
+              int display_width, int display_height, int grid_padding,
+              float cell_padding);
 void reveal_neighobouring_cells(struct Game *game, int x, int y);
 void reveal_cell(struct Game *game, int x, int y);
 int won_game(struct Game *game);

@@ -7,6 +7,11 @@
 // The minimum padding between the game grid and the edges of the display
 #define GRID_PADDING 30
 
+// The amount of padding between the visible edge of a cell and the actual
+// border (i.e. where gridlines would be). This is expressed as a percentage
+// of total cell width/height
+#define CELL_PADDING 0.075
+
 struct Button {
     char label[MAX_BUTTON_LENGTH];
 

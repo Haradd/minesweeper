@@ -4,6 +4,7 @@
 #include <allegro5/allegro.h>
 #include <allegro5/allegro_primitives.h>
 #include <allegro5/allegro_font.h>
+#include <allegro5/allegro_image.h>
 #include <allegro5/allegro_ttf.h>
 
 #include "minesweeper.h"
@@ -19,6 +20,16 @@
 #define BUTTON_MARGIN 30
 // The vertical space between the text and the sides of the button
 #define BUTTON_PADDING 30
+
+// The number of images used in the application
+#define IMAGE_COUNT 2
+
+// A struct to store and retreive ALLEGRO_BITMAPs by filename
+struct BitmapContainer {
+    int count;
+    char names[IMAGE_COUNT][20];
+    void *bitmaps[IMAGE_COUNT];
+};
 
 // Colours
 ALLEGRO_COLOR line_colour;
@@ -38,7 +49,10 @@ ALLEGRO_FONT *title_font;
 ALLEGRO_FONT *button_font;
 
 // Paths to game assets
+char asset_dir[200];
 char font_path[200];
+
+struct BitmapContainer bitmap_container;
 
 /*
  * Initialise allegro and any allegro addons, and create a display and event
@@ -46,10 +60,14 @@ char font_path[200];
  */
 int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
                  ALLEGRO_EVENT_QUEUE **event_queue, ALLEGRO_TIMER **timer,
-                 char *asset_dir) {
+                 char *asset_dir_p) {
 
     // Set paths to game assets
+    strcpy(asset_dir, asset_dir_p);
     sprintf(font_path, "%s/%s", asset_dir, FONT_NAME);
+
+    // Initialise the bitmap collection
+    bitmap_container.count = 0;
 
     if (!al_init()) {
         fprintf(stderr, "Failed to initialise allegro\n");
@@ -57,6 +75,11 @@ int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
     }
     if (!al_init_primitives_addon()) {
         fprintf(stderr, "Failed to initialise primitives addon\n");
+        return 0;
+    }
+
+    if (!al_init_image_addon()) {
+        fprintf(stderr, "Failed to initialise image addon\n");
         return 0;
     }
 
@@ -119,6 +142,30 @@ int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
     label_colour =             al_map_rgb(200, 200, 200);
 
     return 1;
+}
+
+/*
+ * Retreive a bitmap by filename from the bitmap collection, or load it and add
+ * it to the collection if not present
+ */
+ALLEGRO_BITMAP *get_bitmap(char *name) {
+    // Try to find the provided name in the names array in bitmap_collection
+    for (int i=0; i<bitmap_container.count; i++) {
+        if (strcmp(name, bitmap_container.names[i]) == 0) {
+            return bitmap_container.bitmaps[i];
+        }
+    }
+    // If reached here then the bitmap has not been found, so create it
+    char path[200];
+    sprintf(path, "%s/%s", asset_dir, name);
+    ALLEGRO_BITMAP *bmp = al_load_bitmap(path);
+
+    // Store the name and bitmap
+    strcpy(bitmap_container.names[bitmap_container.count], name);
+    bitmap_container.bitmaps[bitmap_container.count] = bmp;
+    bitmap_container.count++;
+
+    return bmp;
 }
 
 /*
@@ -317,4 +364,20 @@ void shade_screen(int x1, int y1, int x2, int y2) {
  */
 void draw_background(int width, int height) {
     al_clear_to_color(background_colour);
+}
+
+/*
+ * Draw the image with the specified filename
+ */
+void draw_image(char *name, int x, int y, int width, int height) {
+    ALLEGRO_BITMAP *bmp = get_bitmap(name);
+
+    al_draw_scaled_bitmap(
+        bmp,
+        // Source x, y, width and height
+        0, 0, al_get_bitmap_width(bmp), al_get_bitmap_height(bmp),
+        // Destination x, y, width and height
+        x, y, width, height,
+        0
+    );
 }

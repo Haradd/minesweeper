@@ -97,7 +97,7 @@ void update_game_timer(struct App *app) {
         if (new_elapsed_seconds != elapsed_seconds) {
             elapsed_seconds = new_elapsed_seconds;
             clear_label(&(app->timer_label));
-            sprintf(app->timer_label.text, "%ds",10 - elapsed_seconds);
+            sprintf(app->timer_label.text, "%ds", elapsed_seconds);
             draw_label(&(app->timer_label));
             app->redraw_required = 1;
         }

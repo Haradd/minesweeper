@@ -28,7 +28,8 @@ struct Label {
 
 int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
                  ALLEGRO_EVENT_QUEUE **event_queue, ALLEGRO_TIMER **timer,
-                 char *asset_dir);
+                 char *asset_dir_p);
+ALLEGRO_BITMAP *get_bitmap(char *name);
 void draw_cell(struct Game *game, int x, int y, int hovered);
 void draw_game(struct Game *game);
 void draw_button(struct Button *button, int hovered);
@@ -41,5 +42,6 @@ int get_clicked_cell(struct Game *game, int mouse_x, int mouse_y, int *x_ptr,
                      int *y_ptr);
 void shade_screen(int x1, int y1, int x2, int y2);
 void draw_background();
+void draw_image(char *name, int x, int y, int width, int height);
 
 #endif

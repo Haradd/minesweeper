@@ -2,6 +2,6 @@
 #define ERROR_H
 
 void exit_app(int status);
-void print_error(const char *message);
+void print_error(const char *format, ...);
 
 #endif

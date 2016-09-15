@@ -157,6 +157,11 @@ int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
     title_font = al_load_ttf_font(font_path, TITLE_FONT_SIZE, 0);
     button_font = al_load_ttf_font(font_path, BUTTON_FONT_SIZE, 0);
 
+    if (title_font == NULL || button_font == NULL) {
+        print_error("Failed to load %s", font_path);
+        exit_app(EXIT_FAILURE);
+    }
+
     return 1;
 }
 
@@ -172,15 +177,11 @@ ALLEGRO_BITMAP *get_bitmap(char *name) {
         }
     }
     // If reached here then the bitmap has not been found, so create it
-    ALLEGRO_BITMAP *bmp = al_load_bitmap(get_asset_path(name));
+    const char *path = get_asset_path(name);
+    ALLEGRO_BITMAP *bmp = al_load_bitmap(path);
 
     if (bmp == NULL) {
-        char message_part[] = "Failed to load ";
-        char *message = malloc(strlen(message_part) + strlen(name) + 1);
-        sprintf(message, "%s%s", message_part, name);
-        print_error(message);
-        free(message);
-
+        print_error("Failed to load %s", path);
         exit_app(EXIT_FAILURE);
     }
 

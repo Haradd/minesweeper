@@ -18,7 +18,10 @@
 #define BUTTON_FONT_SIZE 30
 
 // The vertical space between the text and the sides of the button
-#define BUTTON_PADDING 30
+#define BUTTON_PADDING 25
+
+// The radius for rounded corners on buttons
+#define BUTTON_CORNER_RADIUS 10
 
 // The radius for the rounded rectangle drawn for a cell as percentage
 // (100% = Circle)
@@ -317,7 +320,8 @@ void draw_button(struct Button *button, int hovered) {
     get_button_rect(button, &x1, &y1, &x2, &y2);
 
     ALLEGRO_COLOR c = (hovered ? button_hover_colour : button_background_colour);
-    al_draw_filled_rectangle(x1, y1, x2, y2, c);
+    al_draw_filled_rounded_rectangle(x1, y1, x2, y2, BUTTON_CORNER_RADIUS,
+                                     BUTTON_CORNER_RADIUS, c);
 
     al_draw_text(button_font, button_text_colour, x1 + BUTTON_PADDING,
                  y1 + BUTTON_PADDING, 0, button->label);

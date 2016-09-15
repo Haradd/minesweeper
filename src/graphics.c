@@ -51,22 +51,26 @@ ALLEGRO_FONT *title_font;
 ALLEGRO_FONT *button_font;
 
 // Paths to game assets
-char asset_dir[200];
+char assets_path[200];
 char font_path[200];
 
 struct BitmapContainer bitmap_container;
+
+/*
+ * Return the full path to a file in the assets directory
+ */
+const char *get_asset_path(const char *filename) {
+    char *path = malloc(strlen(assets_path) + strlen(filename) + 1);
+    sprintf(path, "%s%s", assets_path, filename);
+    return path;
+}
 
 /*
  * Initialise allegro and any allegro addons, and create a display and event
  * queue. Return 1 if successful, 0 otherwise
  */
 int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
-                 ALLEGRO_EVENT_QUEUE **event_queue, ALLEGRO_TIMER **timer,
-                 char *asset_dir_p) {
-
-    // Set paths to game assets
-    strcpy(asset_dir, asset_dir_p);
-    sprintf(font_path, "%s/%s", asset_dir, FONT_NAME);
+                 ALLEGRO_EVENT_QUEUE **event_queue, ALLEGRO_TIMER **timer) {
 
     // Initialise the bitmap collection
     bitmap_container.count = 0;
@@ -90,8 +94,6 @@ int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
         print_error("Failed to initialise TTF font addon");
         return 0;
     }
-    title_font = al_load_ttf_font(font_path, TITLE_FONT_SIZE, 0);
-    button_font = al_load_ttf_font(font_path, BUTTON_FONT_SIZE, 0);
 
     if (!al_install_mouse()) {
         print_error("Failed to install mouse");
@@ -142,6 +144,19 @@ int init_allegro(int width, int height, ALLEGRO_DISPLAY **display,
     button_text_colour =       al_map_rgb(0, 0, 0);
     label_colour =             al_map_rgb(200, 200, 200);
 
+    // Set assets path
+    ALLEGRO_PATH *assets_path_al = al_get_standard_path(ALLEGRO_RESOURCES_PATH);
+    ALLEGRO_PATH *assets_path_relative = al_create_path_for_directory("assets");
+    al_join_paths(assets_path_al, assets_path_relative);
+    strcpy(assets_path, al_path_cstr(assets_path_al, ALLEGRO_NATIVE_PATH_SEP));
+    al_destroy_path(assets_path_al);
+    al_destroy_path(assets_path_relative);
+
+    // Set font path and load fonts
+    strcpy(font_path, get_asset_path(FONT_NAME));
+    title_font = al_load_ttf_font(font_path, TITLE_FONT_SIZE, 0);
+    button_font = al_load_ttf_font(font_path, BUTTON_FONT_SIZE, 0);
+
     return 1;
 }
 
@@ -157,9 +172,7 @@ ALLEGRO_BITMAP *get_bitmap(char *name) {
         }
     }
     // If reached here then the bitmap has not been found, so create it
-    char path[200];
-    sprintf(path, "%s/%s", asset_dir, name);
-    ALLEGRO_BITMAP *bmp = al_load_bitmap(path);
+    ALLEGRO_BITMAP *bmp = al_load_bitmap(get_asset_path(name));
 
     if (bmp == NULL) {
         char message_part[] = "Failed to load ";
